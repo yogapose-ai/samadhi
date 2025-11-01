@@ -47,5 +47,4 @@ jobs:
             cd /home/ec2-user/samadhi/web
             docker-compose down -v
             docker rmi ${{steps.login-ecr.outputs.registry}}/samadhi-frontend:latest
-            docker-compose pull
             docker-compose up -d --build
