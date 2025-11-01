@@ -29,7 +29,7 @@ public class Record extends TimeStamp {
     private int total_score;
 
     @ManyToOne
-    @JoinColumn(name="userId")
+    @JoinColumn(name="id")
     private User user;
 
     @OneToMany(mappedBy = "record", cascade = CascadeType.ALL, orphanRemoval = true)

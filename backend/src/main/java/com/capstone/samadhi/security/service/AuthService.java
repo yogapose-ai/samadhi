@@ -33,12 +33,14 @@ public class AuthService {
         if(userRepository.existsById(dto.getId())) {
             return new ResponseEntity<>(new ResponseDto<String>(false, "이미 존재하는 아이디입니다"), HttpStatus.BAD_REQUEST);
         }
-        String url;
+        String url = "https://samadhi-bucket.s3.ap-northeast-2.amazonaws.com/default-profile.png";
         //프로필 등록
-        try {
-            url = s3Service.uploadFile(dto.getProfile());
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ResponseDto<String>(false, "파일 업로드 중 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
+        if(dto.getProfile() != null) {
+            try {
+                url = s3Service.uploadFile(dto.getProfile());
+            } catch (Exception e) {
+                return new ResponseEntity<>(new ResponseDto<String>(false, "파일 업로드 중 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
 
         userRepository.save(new User(

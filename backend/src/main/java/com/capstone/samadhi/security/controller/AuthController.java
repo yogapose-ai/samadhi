@@ -57,9 +57,9 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/sign-up")
+    @PostMapping(value = "/sign-up", consumes = "multipart/form-data")
     @Operation(summary = "회원가입 api")
-    public ResponseEntity<?> signUp(@ModelAttribute SignUpDto dto) {
+    public ResponseEntity<?> signUp(@Parameter(description = "회원 정보 데이터") @ModelAttribute SignUpDto dto) {
         return authService.register(dto);
     }
 
