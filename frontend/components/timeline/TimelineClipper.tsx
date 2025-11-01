@@ -135,7 +135,7 @@ export default function TimelineClipper() {
                   className="flex flex-col items-center min-w-[120px] bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 hover:bg-white/15 transition-all duration-200"
                 >
                   {/* 자세 이름 */}
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mb-2 shadow-lg">
+                  <div className="w-20 h-12 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mb-2 shadow-lg">
                     <span className="text-sm font-bold text-white truncate max-w-[10ch]">
                       {item.pose}
                     </span>

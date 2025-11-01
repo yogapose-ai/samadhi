@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { useCanvasCapture } from "@/hooks/useCanvasCapture";
 import { WebcamCanvas } from "@/components/webcam/WebcamCanvas";
 import { Button } from "@/components/ui/button";
 import { usePoseStore } from "@/store/poseStore";
@@ -53,11 +54,13 @@ export default function WorkoutPage() {
   });
 
   const [showSimilarity, setShowSimilarity] = useState(true);
-  //   const [previousPoseClass, setPreviousPoseClass] = useState<string | null>(
-  //     null
-  //   );
-
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+
+  // canvas 캡쳐 hook
+  //   useCanvasCapture({
+  //     poseClass: video.poseClass,
+  //     enabled: true,
+  //   });
 
   const isScreenShare = sourceType === "stream";
 
@@ -171,77 +174,6 @@ export default function WorkoutPage() {
     video.currentTime = time;
     setCurrentTime(time);
   };
-
-  // canvas 요소를 찾아서 이미지로 캡쳐하는 함수
-  //   const captureCanvas = (selector: string, filename: string): void => {
-  //     try {
-  //       const canvasElement = document.querySelector(
-  //         selector
-  //       ) as HTMLCanvasElement;
-  //       if (!canvasElement) {
-  //         console.warn(`${selector} 요소를 찾을 수 없습니다.`);
-  //         return;
-  //       }
-
-  //       // canvas를 이미지로 변환
-  //       canvasElement.toBlob(
-  //         (blob) => {
-  //           if (!blob) {
-  //             console.error("이미지 변환에 실패했습니다.");
-  //             return;
-  //           }
-
-  //           // Blob URL 생성
-  //           const url = URL.createObjectURL(blob);
-
-  //           // 다운로드 링크 생성 및 클릭
-  //           const link = document.createElement("a");
-  //           link.href = url;
-  //           link.download = filename;
-  //           document.body.appendChild(link);
-  //           link.click();
-  //           document.body.removeChild(link);
-
-  //           // URL 해제
-  //           setTimeout(() => URL.revokeObjectURL(url), 100);
-  //         },
-  //         "image/png",
-  //         1.0
-  //       );
-  //     } catch (error) {
-  //       console.error("캡쳐 중 오류 발생:", error);
-  //     }
-  //   };
-
-  // video.poseClass가 변경될 때 캡쳐
-  //   useEffect(() => {
-  //     if (
-  //       video.poseClass &&
-  //       video.poseClass !== previousPoseClass &&
-  //       video.poseClass !== "unknown" &&
-  //       previousPoseClass !== null
-  //     ) {
-  //       // 약간의 지연을 주어 canvas가 업데이트되도록 함
-  //       setTimeout(() => {
-  //         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  //         const poseName = video.poseClass || "unknown";
-
-  //         // 비디오 canvas 캡쳐 (스켈레톤 포함)
-  //         captureCanvas(
-  //           "canvas[data-capture='video-canvas']",
-  //           `video-${poseName}-${timestamp}.png`
-  //         );
-
-  //         // 웹캠 canvas 캡쳐 (스켈레톤 포함)
-  //         captureCanvas(
-  //           "canvas[data-capture='webcam-canvas']",
-  //           `webcam-${poseName}-${timestamp}.png`
-  //         );
-  //       }, 200);
-  //     }
-
-  //     setPreviousPoseClass(video.poseClass);
-  //   }, [video.poseClass, previousPoseClass]);
 
   if (!isSetupComplete || !isInitialized) {
     return (
