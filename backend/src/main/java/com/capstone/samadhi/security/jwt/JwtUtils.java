@@ -99,6 +99,7 @@ public class JwtUtils {
     public String parseBearerToken(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         if(!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer ")) {
+            log.error("요청 헤더가 존재하지 않음");
             return null;
         }
         return authorization.substring(7);
