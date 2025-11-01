@@ -3,10 +3,13 @@ package com.capstone.samadhi.security.controller;
 import com.capstone.samadhi.common.ResponseDto;
 import com.capstone.samadhi.security.dto.LoginDto;
 import com.capstone.samadhi.security.dto.SignUpDto;
+import com.capstone.samadhi.security.dto.UpdateDto;
 import com.capstone.samadhi.security.jwt.JwtUtils;
 import com.capstone.samadhi.security.repo.UserRepository;
 import com.capstone.samadhi.security.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -58,5 +61,20 @@ public class AuthController {
     @Operation(summary = "회원가입 api")
     public ResponseEntity<?> signUp(@ModelAttribute SignUpDto dto) {
         return authService.register(dto);
+    }
+
+    @PutMapping(value = "/update", consumes = "multipart/form-data")
+    @Operation(summary = "내 정보 수정 api")
+    public ResponseEntity<?> updateInfo(
+            @Parameter(description = "수정 정보 데이터")
+            @ModelAttribute UpdateDto dto
+    ) {
+        return authService.updateInfo(dto);
+    }
+
+    @GetMapping(value = "/user")
+    @Operation(summary = "유저 정보 반환 api")
+    public ResponseEntity<?> getUserInfo(@RequestParam(value = "userId") String userId) {
+        return authService.getUserInfoByUserId(userId);
     }
 }

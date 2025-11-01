@@ -8,4 +8,9 @@ import lombok.Data;
 public class ResponseDto<T> {
     private boolean success;
     private T message;
+
+    public ResponseDto() {
+        this.success = true;
+        this.message = (T) "성공";
+    }
 }
