@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import { WebcamCanvas } from "@/components/webcam/WebcamCanvas";
@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { usePoseStore } from "@/store/poseStore";
 import { useVideoStore } from "@/store/videoStore";
 import { useWebcamStore } from "@/store/webcamStore";
-import { FiSettings, FiX, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiSettings, FiX } from "react-icons/fi";
 import WorkoutSettingsModal from "@/components/workout/WorkoutSettingsModal";
 import { CalculateSimilarity } from "@/lib/mediapipe/angle-calculator";
 import { VideoCanvas } from "@/components/video/VideoCanvas";
 import { VideoControls } from "@/components/video/VideoControls";
-import { motion, AnimatePresence } from "framer-motion";
 import ExitConfirmModal from "@/components/workout/ExitConfirmModal";
 import { toast } from "sonner";
 import TimelineClipper, {
@@ -134,7 +133,15 @@ function useWebcamVideoElement(
   }, [webcamStream, isWebcamActive, webcamVideoRef]);
 }
 
-export default function WorkoutPage() {
+function VideoSkeleton() {
+  return (
+    <div className="w-full aspect-video bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="text-gray-500">로딩 중...</div>
+    </div>
+  );
+}
+
+function WorkoutContent() {
   const router = useRouter();
   const { videoLandmarker, webcamLandmarker, isInitialized } = useMediaPipe();
   const { webcam, video } = usePoseStore();
@@ -161,9 +168,9 @@ export default function WorkoutPage() {
     videoSize: 50,
   });
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const isScreenShare = sourceType === "stream";
   const isReady = isSetupComplete && isInitialized;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { isWebcamActive } = useWebcamLifecycle(isReady);
 
@@ -288,7 +295,6 @@ export default function WorkoutPage() {
       setIsSubmitting(false);
     }
   };
-
   const handleTogglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -320,10 +326,43 @@ export default function WorkoutPage() {
 
   if (!isReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="p-8 text-center bg-white rounded-lg shadow-lg">
-          <div className="w-10 h-10 mx-auto mb-4 border-4 border-blue-400 rounded-full border-t-transparent animate-spin"></div>
-          <p className="text-gray-600">운동 데이터를 준비 중입니다...</p>
+      <div className="flex flex-col h-screen bg-black text-white">
+        <header className="flex items-center justify-between px-4 py-2 bg-black/80 backdrop-blur-sm z-40 shrink-0">
+          <Button
+            variant="outline"
+            disabled
+            className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white/50"
+          >
+            <FiSettings className="w-4 h-4" />
+            <span className="hidden sm:inline">설정</span>
+          </Button>
+
+          <div className="flex-1"></div>
+
+          <Button
+            variant="outline"
+            disabled
+            className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white/50"
+          >
+            <FiX className="w-4 h-4" />
+            <span className="hidden sm:inline">종료</span>
+          </Button>
+        </header>
+
+        <main className="flex flex-1 overflow-hidden">
+          <div className="flex-1 p-4 flex items-start justify-center pt-60">
+            <VideoSkeleton />
+          </div>
+          <div className="flex-1 p-4 flex items-start justify-center pt-60">
+            <VideoSkeleton />
+          </div>
+        </main>
+
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+          <div className="p-8 text-center bg-gray-900 rounded-lg shadow-lg border border-white/10">
+            <div className="w-10 h-10 mx-auto mb-4 border-4 border-blue-400 rounded-full border-t-transparent animate-spin"></div>
+            <p className="text-gray-300">운동 데이터를 준비 중입니다...</p>
+          </div>
         </div>
       </div>
     );
@@ -355,7 +394,7 @@ export default function WorkoutPage() {
 
       <main className="flex flex-1 overflow-hidden">
         <div
-          className="transition-all duration-300 flex items-center justify-center bg-black h-full"
+          className="transition-all duration-300 flex items-start justify-center bg-black h-full pt-8"
           style={{
             width: videoContainerWidth,
             padding: settings.hideVideo ? "0" : "1rem",
@@ -383,7 +422,7 @@ export default function WorkoutPage() {
         </div>
 
         <div
-          className="transition-all duration-300 flex items-center justify-center bg-black h-full"
+          className="transition-all duration-300 flex items-start justify-center bg-black h-full pt-8"
           style={{
             width: webcamContainerWidth,
             padding: settings.hideWebcam ? "0" : "1rem",
@@ -434,5 +473,22 @@ export default function WorkoutPage() {
         isSubmitting={isSubmitting}
       />
     </div>
+  );
+}
+
+export default function WorkoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-black">
+          <div className="p-8 text-center bg-gray-900 rounded-lg shadow-lg border border-white/10">
+            <div className="w-10 h-10 mx-auto mb-4 border-4 border-blue-400 rounded-full border-t-transparent animate-spin"></div>
+            <p className="text-gray-300">페이지를 불러오는 중...</p>
+          </div>
+        </div>
+      }
+    >
+      <WorkoutContent />
+    </Suspense>
   );
 }

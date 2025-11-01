@@ -20,12 +20,13 @@ export type TimelineClipperRef = {
 
 const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
   const { video, webcam } = usePoseStore();
-  const [currentPose, setCurrentPose] = useState<string | null>(null);
+  const [currentPose, setCurrentPose] = useState<string>("unknown");
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [similarities, setSimilarities] = useState<number[]>([]);
   const [showSimilarity, setShowSimilarity] = useState(true);
 
   useEffect(() => {
+    console.log(video.poseClass, currentPose);
     if (video.poseClass !== currentPose) {
       const now = Date.now();
       if (currentPose) {
