@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -26,6 +27,9 @@ import java.util.Date;
 public class JwtUtils {
     private final Key key;
     private final UserRepository userRepository;
+
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
 
     public JwtUtils(@Value("${security.secret.key}") String secretKey, UserRepository userRepository) {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
@@ -82,13 +86,21 @@ public class JwtUtils {
      * 쿠키에 토큰 값 저장
      */
     public void saveTokenInCookie(String token, HttpServletResponse response) {
-        Cookie cookie = new Cookie("User-Token", token);
-        cookie.setHttpOnly(true);
-        int expireTime = 1000*60*60;
-        cookie.setMaxAge(expireTime);
-        cookie.setPath("/");
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("User-Token", token)
+                .maxAge(3600)
+                .path("/")
+                .httpOnly(true);
+
+        log.info("✅ activeProfile 확인: {}", activeProfile);
+        if("prod".equals(activeProfile)) {
+            cookieBuilder.sameSite("None").secure(true);
+        } else {
+            cookieBuilder.sameSite("Lax");
+        }
+
+        ResponseCookie cookie = cookieBuilder.build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     /**
@@ -97,11 +109,14 @@ public class JwtUtils {
      * @return 토큰
      */
     public String parseBearerToken(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        if(!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer ")) {
-            return null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("User-Token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
-        return authorization.substring(7);
+        return null;
     }
 
     /**

@@ -36,6 +36,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  profiles:
+    active: ${DEPLOY:local}
 
 security:
   secret:
