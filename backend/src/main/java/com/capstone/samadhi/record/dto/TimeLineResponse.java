@@ -14,7 +14,10 @@ public record TimeLineResponse(
         String pose,
 
         @Schema(description = "해당 구간 점수", example = "95")
-        float score
+        float score,
+
+        @Schema(description = "image url", example = "image url")
+        String image
 ) {
 
     public static TimeLineResponse from(TimeLine timeLine) {
@@ -22,7 +25,8 @@ public record TimeLineResponse(
                 timeLine.getYoutube_start_sec(),
                 timeLine.getYoutube_end_sec(),
                 timeLine.getPose(),
-                timeLine.getScore()
+                timeLine.getScore(),
+                timeLine.getImage()
         );
     }
 }
