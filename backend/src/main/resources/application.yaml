@@ -1,0 +1,41 @@
+
+
+spring:
+  application:
+    name: samadhi
+  config:
+    import: "optional:file:.env[.properties]"
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_HOST}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_ID}
+            client-secret: ${GOOGLE_SECRET}
+            redirect-uri: ${REDIRECT_URI}
+            scope:
+              - email
+              - profile
+  cloud:
+    aws:
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
+        region:
+          static: ap-northeast-2
+      s3:
+        bucket: samadhi-bucket
+  data:
+    couchbase:
+      bucket-name: samadhi-bucket
+
+security:
+  secret:
+    key: ${SECURITY_SECRET_KEY}
+server:
+  port: 8888
