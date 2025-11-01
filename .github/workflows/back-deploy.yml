@@ -46,5 +46,5 @@ jobs:
           scripts: |
             cd /home/ec2-user/samadhi/
             docker-compose down -v
-            docker-compose pull
-            docker-compose up -d
+            docker rmi ${{steps.login-ecr.outputs.registry}}/samadhi-api:latest
+            docker-compose up -d --build
