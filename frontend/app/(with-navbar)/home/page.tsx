@@ -4,12 +4,15 @@ import Image from "next/image";
 import { FiArrowRight } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
+
   return (
     <div className='flex flex-col min-h-screen'>
       <div className='grid flex-1 grid-cols-1 lg:grid-cols-2'>
-        <div className='relative bg-blue-500 overflow-hidden min-h-[50vh] lg:min-h-[103vh]'>
+        <div className='relative bg-[#3A6BFC] overflow-hidden min-h-[50vh] lg:min-h-[103vh]'>
           <Image
             src='/images/home-left-bg.svg'
             alt='Person doing a handstand yoga pose'
@@ -82,10 +85,13 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 1.0 }}
             >
               <Button
-                variant='primary'
+                variant='primary_ring'
                 size='xl'
                 shape='full'
                 className='text-base font-base'
+                onClick={() => {
+                  router.push("/ready");
+                }}
               >
                 운동 시작하기
                 <FiArrowRight className='w-4 h-4 ml-1' />
