@@ -59,18 +59,15 @@ public class RecordController {
         return ResponseEntity.ok(recordService.findById(SecurityUtil.getCurrentUser(), id));
     }
 
-    @GetMapping("") // <-- (수정 권장) /my
+    @GetMapping("")
     @Operation(summary = "내 레포트 목록 조회", description = "내가 생성한 레포트 목록을 페이징하여 조회합니다.")
     @ApiResponses(value = {
 
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
-    public ResponseEntity<ResponseDto<List<RecordResponse>>> getMyRecords(
-            @PageableDefault(size = 8, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
+    public ResponseEntity<ResponseDto<List<RecordResponse>>> getMyRecords() {
 
-        ResponseDto<List<RecordResponse>> responseBody = recordService.findByUser(SecurityUtil.getCurrentUser(), pageable);
+        ResponseDto<List<RecordResponse>> responseBody = recordService.findByUser(SecurityUtil.getCurrentUser());
 
         return ResponseEntity.ok(responseBody);
     }

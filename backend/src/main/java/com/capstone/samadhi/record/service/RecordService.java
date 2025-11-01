@@ -42,13 +42,13 @@ public class RecordService {
         RecordResponse response = RecordResponse.from(record);
         return new ResponseDto<>(true, response);
     }
-    public ResponseDto<List<RecordResponse>> findByUser(String userId, Pageable pageable) {
+    public ResponseDto<List<RecordResponse>> findByUser(String userId) {
 
         User user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
 
-        Page<Record> recordPage = recordRepository.findByUser(user, pageable);
+        List<Record> recordPage = recordRepository.findByUser(user);
 
-        List<RecordResponse> responseList = recordPage.getContent().stream()
+        List<RecordResponse> responseList = recordPage.stream()
                 .map(RecordResponse::from)
                 .collect(Collectors.toList());
 
