@@ -1,6 +1,7 @@
 package com.capstone.samadhi.record.dto;
 
 import com.capstone.samadhi.record.entity.Record;
+import com.capstone.samadhi.security.entity.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -26,14 +27,14 @@ public record RecordRequest(
         List<TimeLineRequest> timeLineList
 ) {
 
-    public Record toEntity(/*User user*/) {
+    public Record toEntity(User user) {
 
         Record record = Record.builder()
                 .workingout_time(Duration.ofSeconds(workingout_time))
                 .youtube_url(this.youtube_url)
                 .total_score(this.total_score)
                 .build();
-        //record.addUser(user)
+        record.addUser(user);
         if (this.timeLineList != null) {
             this.timeLineList.stream()
                     .map(TimeLineRequest::toEntity) // TimeLine 엔티티로 변환

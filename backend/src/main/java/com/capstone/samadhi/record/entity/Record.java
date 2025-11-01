@@ -1,6 +1,7 @@
 package com.capstone.samadhi.record.entity;
 
 import com.capstone.samadhi.common.TimeStamp;
+import com.capstone.samadhi.security.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,15 +28,15 @@ public class Record extends TimeStamp {
     private String youtube_url;
     private int total_score;
 
-//    @ManyToOne
-//    @JoinColumn(name="userId")
-//    private User user;
+    @ManyToOne
+    @JoinColumn(name="userId")
+    private User user;
 
     @OneToMany(mappedBy = "record", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TimeLine> timeLineList = new ArrayList<>();
 
-//    public void addUser(User user) {
-//        user.getRecordList().add(this);
-//        this.user=user;
-//    }
+    public void addUser(User user) {
+        user.getRecordList().add(this);
+        this.user=user;
+    }
 }

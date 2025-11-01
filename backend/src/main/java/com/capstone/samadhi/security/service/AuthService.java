@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -39,7 +41,8 @@ public class AuthService {
                 dto.getGender().name(),
                 dto.getBirth(),
                 dto.getHeight(),
-                dto.getWeight()
+                dto.getWeight(),
+                new ArrayList<>()
         ));
 
         return new ResponseEntity<>(new ResponseDto<String>(true, "성공"), HttpStatus.OK);
