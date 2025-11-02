@@ -394,6 +394,16 @@ const WorkoutDashboard: React.FC = () => {
     [filtered, startIdx, endIdx]
   );
 
+  const formatHMS = (sec: number) => {
+    const s = Math.max(0, Math.floor(Number(sec) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const ss = s % 60;
+    if (h > 0) return `${h}시간 ${m}분 ${ss}초`;
+    if (m > 0) return `${m}분 ${ss}초`;
+    return `${ss}초`;
+  };
+
   // 상세 이동
   const gotoDetail = (r: DisplayRecord) => {
     const q = new URLSearchParams({
@@ -423,7 +433,10 @@ const WorkoutDashboard: React.FC = () => {
             <span style={labelCss}>날짜 : </span> {r.date}
           </Tag>
           <Tag style={{ ...pill, background: "#FFEFEF" }}>
-            <span style={labelCss}>운동시간 : </span> {r.duration}분
+            <span style={labelCss}>운동시간 : </span>
+            {Number.isFinite(Number(r.duration))
+              ? formatHMS(Number(r.duration))
+              : "-"}
           </Tag>
         </div>
       </Section>

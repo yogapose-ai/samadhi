@@ -133,6 +133,17 @@ const InfoGrid: React.FC<{
   </div>
 );
 
+/* 시간 포맷 H시간 M분 S초 */
+const formatHMS = (sec: number) => {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  if (h > 0) return `${h}시간 ${m}분 ${ss}초`;
+  if (m > 0) return `${m}분 ${ss}초`;
+  return `${ss}초`;
+};
+
 /* 시간 포맷 mm:ss */
 const toMMSS = (sec: number) => {
   const s = Math.max(0, Math.floor(sec));
@@ -457,7 +468,10 @@ const RecordDetailClient: React.FC = () => {
                 <InfoGrid
                   data={{
                     날짜: date || "-",
-                    운동시간: duration ? `${duration}분` : "-",
+                    운동시간: Number.isFinite(Number(duration))
+                      ? formatHMS(Number(duration))
+                      : "-",
+
                     "유튜브 URL": youtubeUrl ? (
                       <a
                         href={youtubeUrl}
