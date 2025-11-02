@@ -132,19 +132,19 @@ export function useWebcamCanvas({
           drawSkeleton(ctx, landmarks);
         } else {
           // 포즈 감지 안 되면 알림
-          ctx.fillStyle = "#FF0000";
-          ctx.font = "bold 20px Arial";
-          ctx.fillText(
-            "포즈가 감지되지 않았습니다. 전신을 보여주세요!",
-            20,
-            40
-          );
+          // ctx.fillStyle = "#FF0000";
+          // ctx.font = "bold 20px Arial";
+          // ctx.fillText(
+          //   "포즈가 감지되지 않았습니다. 전신을 보여주세요!",
+          //   20,
+          //   40
+          // );
         }
       } else {
         // 랜드마크 없으면 알림
-        ctx.fillStyle = "#FFFF00";
-        ctx.font = "bold 20px Arial";
-        ctx.fillText("사람을 찾는 중...", 20, 40);
+        // ctx.fillStyle = "#FFFF00";
+        // ctx.font = "bold 20px Arial";
+        // ctx.fillText("사람을 찾는 중...", 20, 40);
       }
     }
 

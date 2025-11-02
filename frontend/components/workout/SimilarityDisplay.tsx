@@ -20,27 +20,24 @@ export default function SimilarityDisplay({
     }
   }, [similarityValue]);
 
+  const getFeedback = (score: number) => {
+    if (score >= 90) return { text: "완벽해요!", emoji: "🎉" };
+    if (score >= 80) return { text: "훌륭해요!", emoji: "😊" };
+    if (score >= 70) return { text: "잘하고 있어요!", emoji: "👍" };
+    if (score >= 50) return { text: "조금 더 힘내요!", emoji: "💪" };
+    return { text: "집중해주세요!", emoji: "🎯" };
+  };
+
+  const feedback = getFeedback(displayValue);
+
   return (
     <AnimatePresence>
-      <div className='fixed top-8 right-8 z-30'>
-        <div className='relative bg-transparent backdrop-blur-md rounded-2xl shadow-xl  p-6 min-w-[180px]'>
-          <div>
-            <h3 className='text-sm font-semibold text-white/80 mb-3'>
-              현재 유사도
-            </h3>
-            <div
-              className='text-4xl font-bold text-white/80 mb-2 w-36 text-center'
-              key={displayValue}
-            >
-              {displayValue.toFixed(1)}%
-            </div>
-            <div className='flex items-center justify-center gap-1 mt-3'>
-              <div className='w-full bg-white/20 rounded-full h-2.5 overflow-hidden'>
-                <div
-                  className='h-full bg-white/80 rounded-full transition-all duration-300'
-                  style={{ width: `${displayValue}%` }}
-                />
-              </div>
+      <div className="fixed bottom-8 right-8 z-30">
+        <div className="relative bg-transparent backdrop-blur-md rounded-2xl shadow-xl p-8 min-w-[600px]">
+          <div className="text-center text-white/90 font-bold">
+            <div className="text-[70px]">
+              <span className=" mb-3">{feedback.emoji} </span>
+              <span className="">{feedback.text}</span>
             </div>
           </div>
         </div>
