@@ -1,4 +1,4 @@
-## 서비스 배포 URL : https://api.samadhi.kr
+## 🧘 서비스 배포 URL : https://api.samadhi.kr
 
 # Samadhi - Personal Yoga Care Partner
 
@@ -19,7 +19,7 @@ MediaPipe 기반의 실시간 자세 추적 및 분석 시스템을 활용한 �
 ### 실시간 자세 분석
 - MediaPipe Pose Landmarker를 활용한 33개 관절 포인트 추적
 - 3D 공간에서의 정확한 관절 각도 계산
-- 코사인 유사도 + 유클리드 거리 기반 실시간 유사도 측정 (0-100점)
+- 코사인 유사도 실시간 유사도 측정 (0-100점)
 
 ### 다양한 운동 방식
 - **샘플 영상**: 추천 요가 동작 영상 제공
@@ -27,7 +27,7 @@ MediaPipe 기반의 실시간 자세 추적 및 분석 시스템을 활용한 �
 - **웹캠 연동**: 실시간 자세 비교 및 피드백
 
 ### 자세 분류 시스템
-- 31가지 요가 자세 자동 인식 (Plank, Warrior, Tree, Bridge 등)
+- 40가지 요가 자세 자동 인식 (Plank, Warrior, Tree, Bridge 등)
 - 좌우 반전 자동 대응
 - 벡터화된 자세 데이터 기반 분류 (임계값 90점)
 
@@ -181,11 +181,10 @@ calculateAllAngles(landmarks: Landmark[]): JointAngles
 ### 2. 유사도 측정
 
 ```typescript
-CalculateSimilarity(P1: number[], P2: number[], lambda: 0.7): number
+CalculateSimilarity(P1: number[], P2: number[], lambda: 1.0): number
 ```
 
-- **코사인 유사도** (70%): 자세 방향성 비교
-- **정규화된 유클리드 거리** (30%): 자세 크기 비교
+- **코사인 유사도**: 자세 방향성 비교
 - **결과**: 0-100점 범위
 
 ### 3. 자세 분류
@@ -193,14 +192,6 @@ CalculateSimilarity(P1: number[], P2: number[], lambda: 0.7): number
 ```typescript
 classifyPoseWithVectorized(vectorized: number[]): string
 ```
-
-**지원 자세 (31가지)**
-- 기본: Plank, Child, Corpse, Cat, Cow
-- 전사: Warrior1, Warrior2, Warrior3
-- 균형: Tree, Half Moon, Eagle
-- 후굴: Bridge, Camel, Bow, Upward Facing Dog
-- 전굴: Standing Forward Bend, Seated Forward Bend
-- 기타: Downdog, Triangle, Crow, Lotus
 
 ### 4. 타임라인 기록
 
