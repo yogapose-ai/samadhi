@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
-// icons (lucide-react)
+// icons
 import {
   User as UserIcon,
   Calendar as CalendarIcon,
@@ -17,6 +17,7 @@ import {
   LineChart as LineChartIcon,
   ChevronUp,
   ChevronDown,
+  ExternalLink as ExternalLinkIcon,
 } from "lucide-react";
 
 /* ───────────── 스타일 토큰 ───────────── */
@@ -24,7 +25,7 @@ const SURFACE = "bg-white";
 const BG = "bg-[#f5f7fb]";
 const RADIUS = "rounded-2xl";
 const SHADOW = "shadow-[0_10px_30px_rgba(16,24,40,0.06)]";
-const G1 = "bg-[#5B86E5]";
+const G1 = "bg-[#5B86E5]"; // 기존 밝은 파란색 유지
 const G2 = "bg-[#5B86E5]";
 const G3 = "bg-[#5B86E5]";
 
@@ -32,15 +33,13 @@ const G3 = "bg-[#5B86E5]";
 const FS = {
   cardHeader: "text-[18px]",
   gridLabel: "text-[18px]",
-  gridValue: "text-[22px]",
+  gridValue: "text-[20px]",
   title: "text-[clamp(24px,2.6vw,34px)]",
   tag: "text-[16px]",
-  avg: "text-[22px]",
-  time: "text-[19px]",
   pose: "text-[clamp(32px,4vw,56px)]",
 };
 
-/* 시간 포맷 H시간 M분 S초 */
+/* 시간 포맷 */
 const formatHMS = (sec: number) => {
   const s = Math.max(0, Math.floor(Number(sec) || 0));
   const h = Math.floor(s / 3600);
@@ -50,8 +49,6 @@ const formatHMS = (sec: number) => {
   if (m > 0) return `${m}분 ${ss}초`;
   return `${ss}초`;
 };
-
-/* 시간 포맷 mm:ss */
 const toMMSS = (sec: number) => {
   const s = Math.max(0, Math.floor(Number(sec) || 0));
   const mm = String(Math.floor(s / 60)).padStart(2, "0");
@@ -59,7 +56,7 @@ const toMMSS = (sec: number) => {
   return `${mm}:${ss}`;
 };
 
-/* ───────────── 타입 ───────────── */
+/* 타입 */
 type Segment = { startSec: number; endSec: number; pose: string; mean: number };
 
 /* 공용 카드 */
@@ -97,28 +94,28 @@ function UniformCard({
   );
 }
 
-/* 라벨-값 그리드 */
+/* 라벨-값 그리드 (행 정렬 및 균등 간격) */
 function InfoGrid({
   data,
-  cols = "clamp(110px, 24vw, 160px) 1fr", // ★ 반응형 라벨 폭
+  cols = "clamp(110px, 24vw, 160px) 1fr",
 }: {
   data: Record<string, React.ReactNode>;
   cols?: string;
 }) {
   return (
     <div
-      className="grid gap-x-4 gap-y-4 items-start max-w-full"
+      className="grid gap-x-4 gap-y-5 items-center max-w-full"
       style={{ gridTemplateColumns: cols }}
     >
       {Object.entries(data).map(([k, v]) => (
         <React.Fragment key={k}>
           <div
-            className={`text-left font-extrabold text-[#2c2c2c] ${FS.gridLabel}`}
+            className={`text-left font-extrabold text-[#2c2c2c] ${FS.gridLabel} flex items-center`}
           >
             {k}
           </div>
           <div
-            className={`text-left text-[#475467] ${FS.gridValue} break-words break-all whitespace-normal w-full overflow-hidden`}
+            className={`text-left text-[#475467] ${FS.gridValue} flex items-center`}
           >
             {v}
           </div>
@@ -173,7 +170,6 @@ function BigPanel({
           <ChevronUp className="h-6 w-6" />
         </Button>
 
-        {/* ★ 넘침 방지: min-w 제거, 가변 폭 */}
         <div className="w-[min(92%,960px)] max-w-[960px] rounded-2xl bg-white border border-[#eef0f4] shadow-[0_16px_40px_rgba(16,24,40,0.07)] px-8 py-10">
           <div
             className={`${FS.pose} font-black tracking-[0.2px] leading-tight text-center text-[#111827]`}
@@ -201,7 +197,7 @@ function BigPanel({
   );
 }
 
-/* ───────────── 페이지(클라) ───────────── */
+/* ───────────── 페이지 ───────────── */
 const RecordDetailClient: React.FC = () => {
   const sp = useSearchParams();
   const router = useRouter();
@@ -301,7 +297,7 @@ const RecordDetailClient: React.FC = () => {
 
         {/* 본문 */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-          {/* 왼쪽 큰 패널 */}
+          {/* 왼쪽 */}
           <div className="lg:col-span-9">
             <BigPanel
               seg={sel}
@@ -314,7 +310,7 @@ const RecordDetailClient: React.FC = () => {
             />
           </div>
 
-          {/* 오른쪽 정보 */}
+          {/* 오른쪽 */}
           <div className="lg:col-span-3">
             <div className="grid gap-3 h-full">
               <UniformCard
@@ -355,9 +351,12 @@ const RecordDetailClient: React.FC = () => {
                         href={youtubeUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[16px] text-primary break-words break-all whitespace-normal inline-block w-full"
+                        className="flex items-center"
                       >
-                        {youtubeUrl}
+                        <Button className="h-8 px-3 text-[14px] font-bold text-white bg-[#3856B8] hover:bg-[#2E4AA5] focus-visible:ring-[#3856B8] translate-y-[1px]">
+                          <ExternalLinkIcon className="w-[16px] h-[16px] mr-1 translate-y-[-0.5px]" />
+                          바로가기
+                        </Button>
                       </a>
                     ) : (
                       "-"

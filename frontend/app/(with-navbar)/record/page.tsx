@@ -71,20 +71,13 @@ const getThumb = (url: string) => {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
 };
 
-/* 섹션/카드 */
-const Section: React.FC<
-  React.PropsWithChildren<{ title: string; first?: boolean }>
-> = ({ title, first, children }) => (
-  <div className={cn(!first && "border-t border-border mt-3 pt-3")}>
-    <div className="text-[17px] font-semibold">{title}</div>
-    <div className="mt-2.5">{children}</div>
-  </div>
-);
+/* 레이아웃 상수 */
+const CARD_ROW_H = 520; // 그리드 한 행(한 카드 셀) 높이
 
+/* 카드형 컨테이너 */
 const CardLikeBox: React.FC<
   React.PropsWithChildren & { onClick?: () => void }
 > = ({ children, onClick }) => {
-  const [hover, setHover] = useState(false);
   const clickable = typeof onClick === "function";
   return (
     <div
@@ -98,12 +91,11 @@ const CardLikeBox: React.FC<
         }
       }}
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       className={cn(
-        "w-full rounded-lg border bg-card p-4 text-left shadow-sm transition",
-        clickable ? "cursor-pointer" : "cursor-default",
-        hover && "-translate-y-[3px] shadow-lg"
+        "h-full flex flex-col rounded-lg border bg-card p-4 text-left shadow-sm transition",
+        clickable
+          ? "cursor-pointer hover:-translate-y-[2px] hover:shadow-md"
+          : "cursor-default"
       )}
     >
       {children}
@@ -111,32 +103,21 @@ const CardLikeBox: React.FC<
   );
 };
 
+/* 16:9 썸네일 – URL 없어도 고정 프레임 유지 */
 const ThumbBox: React.FC<{ url?: string }> = ({ url }) => {
   const src = url ? getThumb(url) : null;
-  const Frame: React.FC<React.PropsWithChildren> = ({ children }) => (
+  return (
     <div className="rounded-lg border bg-muted/20 overflow-hidden">
-      <div className="relative w-full pt-[56.25%]">{children}</div>
+      <div className="relative w-full pt-[56.25%]">
+        {src && (
+          <img
+            src={src}
+            alt="YouTube thumbnail"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+      </div>
     </div>
-  );
-  return src ? (
-    <a
-      href={url}
-      target="_blank"
-      rel="noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="block no-underline"
-      aria-label="유튜브 영상 보기"
-    >
-      <Frame>
-        <img
-          src={src}
-          alt="YouTube thumbnail"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      </Frame>
-    </a>
-  ) : (
-    <Frame />
   );
 };
 
@@ -209,7 +190,7 @@ const WorkoutDashboard: React.FC = () => {
   ]);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 8;
+  const pageSize = 8; // 2행×4열
 
   useEffect(() => {
     (async () => {
@@ -290,7 +271,7 @@ const WorkoutDashboard: React.FC = () => {
     router.push(`/record/detail?${q.toString()}`);
   };
 
-  /* ── 사이드바 UI: 버튼/카드 동일 기준(정중앙) ── */
+  /* 사이드바 */
   const FilterSidebar = (
     <div className="p-4">
       <div className="flex items-center justify-end mb-2">
@@ -303,7 +284,6 @@ const WorkoutDashboard: React.FC = () => {
         </Button>
       </div>
 
-      {/* 공통 폭 컨테이너: 버튼/카드가 같은 좌우 기준 사용 */}
       <div className="mx-auto w-full" style={{ maxWidth: 320 }}>
         {!collapsed && (
           <Button
@@ -417,16 +397,15 @@ const WorkoutDashboard: React.FC = () => {
     </div>
   );
 
-  /* 레이아웃: 완전 반응형 */
+  /* 레이아웃 */
   const gridCols = collapsed
     ? "grid-cols-[56px_minmax(0,1fr)]"
     : "grid-cols-[clamp(56px,20vw,300px)_minmax(0,1fr)]";
 
   return (
     <div className="w-full">
-      {/* 바깥 그리드에는 패딩을 주지 않고, 메인에만 패딩을 줘 사이드바 치우침 방지 */}
       <div className={`grid w-full ${gridCols} gap-0`}>
-        {/* 사이드바: sticky + 내부 스크롤 */}
+        {/* 사이드바 */}
         <aside
           className="border-r bg-white"
           style={{
@@ -440,7 +419,7 @@ const WorkoutDashboard: React.FC = () => {
           {FilterSidebar}
         </aside>
 
-        {/* 메인: 반응형 카드 그리드 */}
+        {/* 메인 */}
         <main className="relative bg-muted/30 px-4 sm:px-6 lg:px-8 py-6">
           {loading && (
             <div className="fixed inset-0 z-10 flex items-center justify-center bg-background/50">
@@ -466,52 +445,70 @@ const WorkoutDashboard: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-4 items-stretch">
+              {/* 4열 + 행 높이 고정 */}
+              <div
+                className={`grid grid-cols-4 gap-4 [grid-auto-rows:${CARD_ROW_H}px]`}
+              >
                 {pageItems.map((r) => (
                   <div key={r.id} className="h-full">
                     <CardLikeBox onClick={() => gotoDetail(r)}>
-                      <Section title="운동 정보" first>
-                        <div className="flex flex-wrap gap-2.5">
-                          <Badge
-                            variant="secondary"
-                            className="rounded-full px-3 py-1 text-[14px]"
-                          >
-                            <span className="opacity-75 font-semibold mr-2">
-                              날짜 :
-                            </span>{" "}
-                            {r.date}
-                          </Badge>
-                          <Badge
-                            variant="secondary"
-                            className="rounded-full px-3 py-1 text-[14px]"
-                          >
-                            <span className="opacity-75 font-semibold mr-2">
-                              운동시간 :
-                            </span>
-                            {Number.isFinite(Number(r.duration))
-                              ? formatHMS(Number(r.duration))
-                              : "-"}
-                          </Badge>
-                        </div>
-                      </Section>
+                      {/* 위 정보 영역: '최소 높이'만 보장 + 날짜/운동시간은 항상 세로 */}
+                      <div className="flex flex-col gap-3 min-h-[140px] md:min-h-[160px] xl:min-h-[180px]">
+                        <div>
+                          <div className="text-[17px] font-semibold mb-2">
+                            운동 정보
+                          </div>
 
-                      <Section title="기록 정보">
-                        <div className="flex flex-wrap gap-2.5">
-                          <Badge
-                            variant="outline"
-                            className="rounded-full px-3 py-1 text-[14px]"
-                          >
-                            <span className="opacity-75 font-semibold mr-2">
-                              유사도 평균 :
-                            </span>{" "}
-                            {r.mean.toFixed(1)}%
-                          </Badge>
+                          {/* ✅ 항상 세로(수직) 고정 */}
+                          <div className="flex flex-col items-start gap-2">
+                            <Badge
+                              variant="secondary"
+                              className="w-fit rounded-full px-3 py-1 text-[14px] whitespace-nowrap"
+                            >
+                              <span className="opacity-75 font-semibold mr-2">
+                                날짜 :
+                              </span>
+                              {r.date}
+                            </Badge>
+                            <Badge
+                              variant="secondary"
+                              className="w-fit rounded-full px-3 py-1 text-[14px] whitespace-nowrap"
+                            >
+                              <span className="opacity-75 font-semibold mr-2">
+                                운동시간 :
+                              </span>
+                              {Number.isFinite(Number(r.duration))
+                                ? formatHMS(Number(r.duration))
+                                : "-"}
+                            </Badge>
+                          </div>
                         </div>
-                      </Section>
 
-                      <div className="mt-3">
+                        <div className="border-t pt-3">
+                          <div className="text-[17px] font-semibold mb-2">
+                            기록 정보
+                          </div>
+                          <div className="flex flex-wrap gap-2.5">
+                            <Badge
+                              variant="outline"
+                              className="rounded-full px-3 py-1 text-[14px] whitespace-nowrap"
+                            >
+                              <span className="opacity-75 font-semibold mr-2">
+                                유사도 평균 :
+                              </span>
+                              {r.mean.toFixed(1)}%
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 16:9 썸네일 — 카드 하단으로 밀착 */}
+                      <div className="mt-auto pt-3">
                         <ThumbBox url={r.youtubeUrl} />
                       </div>
+
+                      {/* 남는 여백 채우기 */}
+                      <div className="flex-1" />
                     </CardLikeBox>
                   </div>
                 ))}
