@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dayjs, { Dayjs } from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -172,6 +172,14 @@ const formatHMS = (sec: number) => {
 };
 
 /* ── 메인 ── */
+export default function RecordPage() {
+  return (
+    <Suspense fallback={<div>기록을 불러오는 중...</div>}>
+      <WorkoutDashboard />
+    </Suspense>
+  );
+}
+
 const WorkoutDashboard: React.FC = () => {
   const router = useRouter();
   const sp = useSearchParams();
@@ -573,5 +581,3 @@ const WorkoutDashboard: React.FC = () => {
     </div>
   );
 };
-
-export default WorkoutDashboard;
