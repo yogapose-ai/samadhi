@@ -19,13 +19,13 @@ import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier
 interface VideoCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
+  detectForVideo: (video: HTMLVideoElement, timestamp: number) => Promise<any>;
 }
 
 export function VideoCanvas({
   videoRef,
   isInitialized,
-  landmarker,
+  detectForVideo,
 }: VideoCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -62,7 +62,7 @@ export function VideoCanvas({
 
   // 감지 루프 시작/중지
   useEffect(() => {
-    if (isPlaying && isInitialized && videoRef.current && landmarker) {
+    if (isPlaying && isInitialized && videoRef.current) {
       detectLoop();
     } else if (!isPlaying && animationRef.current) {
       cancelAnimationFrame(animationRef.current);
@@ -74,10 +74,10 @@ export function VideoCanvas({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, isInitialized, landmarker]);
+  }, [isPlaying, isInitialized]);
 
-  const detectLoop = () => {
-    if (!videoRef.current || !canvasRef.current || !landmarker || !isPlaying) {
+  const detectLoop = async () => {
+    if (!videoRef.current || !canvasRef.current || !isPlaying) {
       animationRef.current = requestAnimationFrame(detectLoop);
       return;
     }
@@ -98,9 +98,11 @@ export function VideoCanvas({
       ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
       const detectStartTime = performance.now();
-      const results = landmarker.detectForVideo(videoElement, detectStartTime);
 
-      if (results.landmarks && results.landmarks.length > 0) {
+      // 웹워커를 통한 포즈 감지
+      const results = await detectForVideo(videoElement, detectStartTime);
+
+      if (results && results.landmarks && results.landmarks.length > 0) {
         const landmarks = results.landmarks[0];
         const worldLandmarks = results.worldLandmarks?.[0];
 
@@ -141,14 +143,7 @@ export function VideoCanvas({
           drawSkeleton(ctx, landmarks);
         } else {
           drawSkeleton(ctx, landmarks);
-          // ctx.fillStyle = "#FF9900";
-          // ctx.font = "bold 24px Arial";
-          // ctx.fillText("처리 중...", 20, 35);
         }
-      } else {
-        // ctx.fillStyle = "#FFFF00";
-        // ctx.font = "bold 24px Arial";
-        // ctx.fillText("사람을 찾는 중...", 20, 35);
       }
     }
 

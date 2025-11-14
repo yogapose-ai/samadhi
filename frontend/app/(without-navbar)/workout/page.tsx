@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { useMediaPipeWorker } from "@/hooks/useMediaPipeWorker";
 import { WebcamCanvas } from "@/components/webcam/WebcamCanvas";
 import { Button } from "@/components/ui/button";
 import { usePoseStore } from "@/store/poseStore";
@@ -106,10 +106,11 @@ function useVideoSync(
 function useWebcamVideoElement(
   webcamVideoRef: React.RefObject<HTMLVideoElement | null>,
   webcamStream: MediaStream | null,
-  isWebcamActive: boolean
+  isWebcamActive: boolean,
+  isReady: boolean
 ) {
   useEffect(() => {
-    if (!webcamStream || !isWebcamActive) {
+    if (!webcamStream || !isWebcamActive || !isReady) {
       return;
     }
 
@@ -193,12 +194,26 @@ function useWebcamVideoElement(
         }
       }
     };
-  }, [webcamStream, isWebcamActive, webcamVideoRef]);
+  }, [webcamStream, isWebcamActive, isReady, webcamVideoRef]);
 }
 
 function WorkoutContent() {
   const router = useRouter();
-  const { videoLandmarker, webcamLandmarker, isInitialized } = useMediaPipe();
+
+  // 1. 영상용 워커
+  const {
+    isInitialized: isVideoPipeReady,
+    error: videoWorkerError,
+    detectForVideo: detectForGuideVideo,
+  } = useMediaPipeWorker();
+
+  // 2. 웹캠용 워커
+  const {
+    isInitialized: isWebcamPipeReady,
+    error: webcamWorkerError,
+    detectForVideo: detectForWebcam,
+  } = useMediaPipeWorker();
+
   const { webcam, video } = usePoseStore();
   const {
     source,
@@ -224,7 +239,10 @@ function WorkoutContent() {
   });
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const isScreenShare = sourceType === "stream";
+
+  const isInitialized = isVideoPipeReady && isWebcamPipeReady;
   const isReady = isSetupComplete && isInitialized;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { isWebcamActive } = useWebcamLifecycle(isReady);
@@ -243,7 +261,7 @@ function WorkoutContent() {
   }, [isScreenShare, router]);
 
   useVideoSync(videoRef, sourceType, isReady);
-  useWebcamVideoElement(webcamVideoRef, webcamStream, isWebcamActive);
+  useWebcamVideoElement(webcamVideoRef, webcamStream, isWebcamActive, isReady);
 
   // 새로고침 감지 및 리다이렉트 (페이지 마운트 시 한 번만 실행)
   useEffect(() => {
@@ -427,7 +445,7 @@ function WorkoutContent() {
             <VideoCanvas
               videoRef={videoRef}
               isInitialized={isInitialized}
-              landmarker={videoLandmarker}
+              detectForVideo={detectForGuideVideo}
             />
             {!isScreenShare && (
               <div className="p-2 bg-black/50 rounded-b-lg">
@@ -456,7 +474,7 @@ function WorkoutContent() {
               videoRef={webcamVideoRef}
               isActive={isWebcamActive}
               isInitialized={isInitialized}
-              landmarker={webcamLandmarker}
+              detectForVideo={detectForWebcam}
             />
             {!isScreenShare && (
               <div className="p-2" style={{ visibility: "hidden" }}>

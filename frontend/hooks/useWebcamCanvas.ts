@@ -11,16 +11,13 @@ import {
 } from "@/lib/mediapipe/angle-calculator";
 import { usePoseStore } from "@/store/poseStore";
 import { JointAngles } from "@/types/pose";
-import {
-  classifyPoseWithVectorized,
-  normalizeMirroredVectorized,
-} from "@/lib/poseClassifier/pose-classifier-with-vectorized";
+import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 
 interface UseWebcamCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isActive: boolean;
   isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
+  detectForVideo: (video: HTMLVideoElement, timestamp: number) => Promise<any>;
 }
 
 // 스켈레톤 그리기
@@ -49,7 +46,7 @@ export function useWebcamCanvas({
   videoRef,
   isActive,
   isInitialized,
-  landmarker,
+  detectForVideo,
 }: UseWebcamCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -58,8 +55,8 @@ export function useWebcamCanvas({
   const { webcam, setWebcamData, setPreviousAngles } = usePoseStore();
 
   // 포즈 감지 루프
-  const detectLoop = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current || !landmarker || !isActive) {
+  const detectLoop = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || !isActive) {
       animationRef.current = requestAnimationFrame(detectLoop);
       return;
     }
@@ -80,16 +77,13 @@ export function useWebcamCanvas({
       ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
       ctx.restore();
 
-      // console.log('비디오 좌표', videoLandmarks);
-      // console.log('벡터', vec);
-
       // 포즈 감지
       const detectStartTime = performance.now();
-      const results = landmarker.detectForVideo(video, detectStartTime);
-      // const detectEndTime = performance.now();
-      // const detectionLatency = detectEndTime - detectStartTime;
 
-      if (results.landmarks && results.landmarks.length > 0) {
+      // 웹워커를 통한 포즈 감지
+      const results = await detectForVideo(video, detectStartTime);
+
+      if (results && results.landmarks && results.landmarks.length > 0) {
         const landmarks = results.landmarks[0];
         const worldLandmarks = results.worldLandmarks?.[0];
 
@@ -103,16 +97,12 @@ export function useWebcamCanvas({
         }
 
         // 벡터화
-        // const data = normalizeMirroredVectorized(vectorize(landmarks, video.videoHeight, video.videoWidth));
-
         const data = vectorize(landmarks, video.videoHeight, video.videoWidth);
 
         // 2D 랜드마크가 감지되었다면, 각도 계산 여부와 관계없이 스켈레톤을 즉시 그림
         drawSkeleton(ctx, landmarks);
 
         if (worldLandmarks) {
-          // const totalLatency = performance.now() - detectStartTime;
-
           // 각도 계산
           const angles = calculateAllAngles(
             worldLandmarks,
@@ -144,21 +134,7 @@ export function useWebcamCanvas({
 
           // 스켈레톤 그리기
           drawSkeleton(ctx, landmarks);
-        } else {
-          // 포즈 감지 안 되면 알림
-          // ctx.fillStyle = "#FF0000";
-          // ctx.font = "bold 20px Arial";
-          // ctx.fillText(
-          //   "포즈가 감지되지 않았습니다. 전신을 보여주세요!",
-          //   20,
-          //   40
-          // );
         }
-      } else {
-        // 랜드마크 없으면 알림
-        // ctx.fillStyle = "#FFFF00";
-        // ctx.font = "bold 20px Arial";
-        // ctx.fillText("사람을 찾는 중...", 20, 40);
       }
     }
 
@@ -166,7 +142,7 @@ export function useWebcamCanvas({
       animationRef.current = requestAnimationFrame(detectLoop);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, landmarker, setWebcamData, videoRef]);
+  }, [isActive, detectForVideo, setWebcamData, videoRef]);
 
   useEffect(() => {
     if (isActive && isInitialized && videoRef.current) {
