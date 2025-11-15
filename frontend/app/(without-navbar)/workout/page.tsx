@@ -21,6 +21,7 @@ import TimelineClipper, {
 import SimilarityDisplay from "@/components/workout/SimilarityDisplay";
 import api from "@/lib/axios";
 import { PerformanceMonitor } from "@/components/workout/PerformanceMonitor";
+import { ModelLoadingOverlay } from "@/components/workout/ModelLoadingOverlay";
 
 function useWebcamLifecycle(isReady: boolean) {
   const startWebcam = useWebcamStore((state) => state.startWebcam);
@@ -28,7 +29,9 @@ function useWebcamLifecycle(isReady: boolean) {
   const isWebcamActive = useWebcamStore((state) => state.isActive);
 
   useEffect(() => {
+    // 모델이 완전히 로드된 후에만 웹캠 시작
     if (isReady) {
+      console.log("✅ 모델 로딩 완료, 웹캠 시작");
       startWebcam();
       return () => {
         stopWebcam();
@@ -193,14 +196,6 @@ function useWebcamVideoElement(
   }, [webcamStream, isWebcamActive, webcamVideoRef]);
 }
 
-function VideoSkeleton() {
-  return (
-    <div className="w-full aspect-video bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
-      <div className="text-gray-500">로딩 중...</div>
-    </div>
-  );
-}
-
 function WorkoutContent() {
   const router = useRouter();
   const { videoLandmarker, webcamLandmarker, isInitialized } = useMediaPipe();
@@ -268,6 +263,7 @@ function WorkoutContent() {
 
   useEffect(() => {
     if (source && isInitialized) {
+      console.log("✅ Source와 모델 초기화 완료");
       setIsSetupComplete(true);
     }
   }, [source, isInitialized]);
@@ -389,57 +385,17 @@ function WorkoutContent() {
       : `${100 - settings.videoSize}%`
     : "0%";
 
-  if (!isReady) {
-    return (
-      <div className="flex flex-col h-screen bg-black text-white">
-        <header className="flex items-center justify-between px-4 py-2 bg-black/80 backdrop-blur-sm z-40 shrink-0">
-          <Button
-            variant="outline"
-            disabled
-            className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white/50"
-          >
-            <FiSettings className="w-4 h-4" />
-            <span className="hidden sm:inline">설정</span>
-          </Button>
-
-          <div className="flex-1"></div>
-
-          <Button
-            variant="outline"
-            disabled
-            className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white/50"
-          >
-            <FiX className="w-4 h-4" />
-            <span className="hidden sm:inline">종료</span>
-          </Button>
-        </header>
-
-        <main className="flex flex-1 overflow-hidden">
-          <div className="flex-1 p-4 flex items-start justify-center pt-60">
-            <VideoSkeleton />
-          </div>
-          <div className="flex-1 p-4 flex items-start justify-center pt-60">
-            <VideoSkeleton />
-          </div>
-        </main>
-
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-          <div className="p-8 text-center bg-gray-900 rounded-lg shadow-lg border border-white/10">
-            <div className="w-10 h-10 mx-auto mb-4 border-4 border-blue-400 rounded-full border-t-transparent animate-spin"></div>
-            <p className="text-gray-300">운동 데이터를 준비 중입니다...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-screen bg-black text-white">
+      {/* 모델 로딩 오버레이 */}
+      <ModelLoadingOverlay />
+
       <header className="flex items-center justify-between px-4 py-2 bg-black/80 backdrop-blur-sm z-40 shrink-0">
         <Button
           variant="outline"
           onClick={() => setIsSettingsOpen(true)}
-          className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:bg-white hover:text-black"
+          disabled={!isReady}
+          className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-50"
         >
           <FiSettings className="w-4 h-4" />
           <span className="hidden sm:inline">설정</span>
@@ -450,7 +406,8 @@ function WorkoutContent() {
         <Button
           variant="outline"
           onClick={handleExit}
-          className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:text-white hover:bg-red-600 hover:border-red-600"
+          disabled={!isReady}
+          className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:text-white hover:bg-red-600 hover:border-red-600 disabled:opacity-50"
         >
           <FiX className="w-4 h-4" />
           <span className="hidden sm:inline">종료</span>
