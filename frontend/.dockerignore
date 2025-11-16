@@ -1,0 +1,52 @@
+# Node modules & dependencies
+node_modules
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build output (이미 빌드된 결과물은 이미지 내에서 다시 빌드됨)
+build
+dist
+
+# 환경 변수 파일 (보안 이슈 방지)
+.env
+.env.*
+!.env.example   # 예시용 env는 포함 가능
+
+# OS / Editor 관련
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea
+.vscode
+*.log
+
+# Git / Version control
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# Docker 관련
+Dockerfile
+docker-compose*.yml
+
+# 테스트 및 문서
+coverage
+*.spec.js
+*.test.js
+__tests__
+docs
+README.md
+
+# Temporary or cache directories
+.cache
+.tmp
+.temp
+.babel-cache
+eslintcache

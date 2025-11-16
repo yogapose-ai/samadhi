@@ -14,7 +14,7 @@ interface SampleVideo {
 }
 
 interface StepSampleVideoProps {
-  onComplete: (video: { title: string; path: string } | null) => void;
+  onComplete: (video: { title: string; path: string } | null) => void; //test
 }
 
 export default function StepSampleVideo({ onComplete }: StepSampleVideoProps) {

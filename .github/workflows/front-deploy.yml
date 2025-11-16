@@ -48,9 +48,12 @@ jobs:
           host: 3.34.132.201
           username: ec2-user
           key: ${{secrets.SSH_PRIVATE_KEY}}
-          scripts: |
+          script: |
             cd /home/ec2-user/samadhi/web
+
+            aws ecr get-login-password --region ap-northeast-2 \
+              | docker login --username AWS --password-stdin 816069131609.dkr.ecr.ap-northeast-2.amazonaws.com
+
             docker-compose down -v
-            docker rmi ${{steps.login-ecr.outputs.registry}}/samadhi-frontend:latest
             docker-compose pull
             docker-compose up -d --build
