@@ -8,25 +8,45 @@ import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier
 let landmarker = null;
 let isInitialized = false;
 
+const DELEGATE_ORDER = ["GPU", "CPU"];
+
 async function initializeLandmarker() {
   const modelUrl = new URL(
-    "/models/pose_landmarker_heavy.task",
+    "/models/pose_landmarker_full.task",
     self.location.origin
   ).href;
 
   const filesetResolver = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
   );
+  let finalDelegate = null;
 
-  landmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
-    baseOptions: {
-      modelAssetPath: modelUrl,
-      delegate: "GPU",
-    },
-    runningMode: "VIDEO",
-  });
+  for (const delegate of DELEGATE_ORDER) {
+    try {
+      landmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath: modelUrl,
+          delegate: delegate,
+        },
+        runningMode: "VIDEO",
+      });
+      finalDelegate = delegate;
+      console.log(`✅ Landmarker initialized with ${delegate} delegate.`);
+      break;
+    } catch {
+      console.warn(
+        `❌ Initialization with ${delegate} failed. Trying next delegate...`
+      );
+    }
+  }
+
+  if (!finalDelegate) {
+    console.error("🚨 Landmarker initialization failed with all delegates.");
+    return;
+  }
+
   isInitialized = true;
-  postMessage({ type: "INITIALIZED" });
+  postMessage({ type: "INITIALIZED", delegate: finalDelegate });
 }
 
 self.onmessage = async (event) => {
