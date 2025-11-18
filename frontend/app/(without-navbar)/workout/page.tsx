@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { usePoseStore, useVideoStore, useWebcamStore } from "@/store";
 import { calculateSimilarity } from "@/lib/mediapipe/angle-calculator";
 import { calculateContainerWidths } from "@/lib/workout/utils";
-import { useMediaPipe } from "@/hooks/useMediaPipe";
 import {
   useVideoControls,
   useWorkoutExit,
@@ -22,8 +21,6 @@ import { VideoSection } from "@/components/video";
 import { WebcamSection } from "@/components/webcam";
 import {
   ExitConfirmModal,
-  ModelLoadingOverlay,
-  PerformanceMonitor,
   SimilarityDisplay,
   WorkoutHeader,
   WorkoutSettingsModal,
@@ -31,7 +28,6 @@ import {
 
 function WorkoutContent() {
   const router = useRouter();
-  const { videoLandmarker, webcamLandmarker, isInitialized } = useMediaPipe();
   const { webcam, video } = usePoseStore();
   const { source, sourceType, isPlaying, currentTime, duration } =
     useVideoStore();
@@ -50,8 +46,7 @@ function WorkoutContent() {
 
   const isScreenShare = sourceType === "stream";
 
-  const { isSetupComplete } = useWorkoutInitialization(source, isInitialized);
-  const isReady = isSetupComplete && isInitialized;
+  const { isSetupComplete: isReady } = useWorkoutInitialization(source);
 
   const { isWebcamActive } = useWebcamLifecycle(isReady);
   useVideoCleanup(videoRef);
@@ -83,7 +78,7 @@ function WorkoutContent() {
 
   return (
     <div className='flex flex-col h-screen bg-black text-white'>
-      <ModelLoadingOverlay />
+      {/* <ModelLoadingOverlay /> */}
 
       <WorkoutHeader
         isReady={isReady}
@@ -94,8 +89,6 @@ function WorkoutContent() {
       <main className='flex flex-1 overflow-hidden'>
         <VideoSection
           videoRef={videoRef}
-          isInitialized={isInitialized}
-          landmarker={videoLandmarker}
           isScreenShare={isScreenShare}
           isPlaying={isPlaying}
           currentTime={currentTime}
@@ -109,14 +102,12 @@ function WorkoutContent() {
         <WebcamSection
           webcamVideoRef={webcamVideoRef}
           isWebcamActive={isWebcamActive}
-          isInitialized={isInitialized}
-          landmarker={webcamLandmarker}
           containerWidth={webcamContainerWidth}
           isHidden={settings.hideWebcam}
         />
       </main>
 
-      <PerformanceMonitor />
+      {/* <PerformanceMonitor /> */}
 
       <TimelineClipper ref={timelineClipperRef} />
 

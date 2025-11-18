@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function useWorkoutInitialization(
-  source: string | MediaStream | null,
-  isInitialized: boolean
-) {
+export function useWorkoutInitialization(source: string | MediaStream | null) {
   const router = useRouter();
   const [isSetupComplete, setIsSetupComplete] = useState(false);
 
@@ -22,12 +19,12 @@ export function useWorkoutInitialization(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // source와 모델 초기화 완료 체크
+  // source 체크
   useEffect(() => {
-    if (source && isInitialized) {
+    if (source) {
       setIsSetupComplete(true);
     }
-  }, [source, isInitialized]);
+  }, [source]);
 
   return { isSetupComplete };
 }

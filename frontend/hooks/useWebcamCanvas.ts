@@ -1,23 +1,14 @@
-import { useRef, useEffect, useCallback } from "react";
-import { JointAngles } from "@/types";
+import { useRef, useEffect, useCallback, useState } from "react";
 import {
   DrawingUtils,
-  Landmark,
   NormalizedLandmark,
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
-import {
-  calculateAllAngles,
-  vectorize,
-} from "@/lib/mediapipe/angle-calculator";
-import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 import { usePoseStore } from "@/store/poseStore";
 
 interface UseWebcamCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isActive: boolean;
-  isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
 }
 
 const drawSkeleton = (
@@ -38,104 +29,55 @@ const drawSkeleton = (
   });
 };
 
-const sequenceData: Landmark[][] = [];
-const startTime = Date.now();
-
-export function useWebcamCanvas({
-  videoRef,
-  isActive,
-  isInitialized,
-  landmarker,
-}: UseWebcamCanvasProps) {
+export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
-  const lastFrameTime = useRef<number>(0);
+  const lastDetectionTime = useRef<number>(0);
 
-  const { webcam, setWebcamData, setPreviousAngles } = usePoseStore();
+  const workerRef = useRef<Worker | null>(null);
+  const [isWorkerInitialized, setIsWorkerInitialized] = useState(false);
+  const lastDrawnLandmarks = useRef<NormalizedLandmark[] | null>(null);
 
-  // 포즈 감지 루프
-  const detectLoop = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current || !landmarker || !isActive) {
-      animationRef.current = requestAnimationFrame(detectLoop);
-      return;
-    }
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    if (video.readyState === video.HAVE_ENOUGH_DATA && ctx) {
-      // 캔버스 크기 조정
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      // 비디오 프레임 그리기
-      ctx.save();
-      ctx.scale(-1, 1);
-      ctx.translate(-canvas.width, 0);
-      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-      ctx.restore();
-
-      const detectStartTime = performance.now();
-      const results = landmarker.detectForVideo(video, detectStartTime);
-
-      if (results.landmarks && results.landmarks.length > 0) {
-        const landmarks = results.landmarks[0];
-        const worldLandmarks = results.worldLandmarks?.[0];
-
-        // 👉 전처리 전, 후 jitter 값 비교를 위한 코드
-        // (콘솔창에 찍어 확인하므로 실제 서비스시에는 주석 처리 필요)
-        const elapsed = (Date.now() - startTime) / 1000;
-        if (elapsed >= 10) {
-          // getJitter3D(sequenceData);
-        } else {
-          sequenceData.push(landmarks);
-        }
-
-        const data = vectorize(landmarks, video.videoHeight, video.videoWidth);
-
-        // 2D 랜드마크가 감지되었다면, 각도 계산 여부와 관계없이 스켈레톤을 즉시 그림
-        drawSkeleton(ctx, landmarks);
-
-        if (worldLandmarks) {
-          const angles = calculateAllAngles(
-            worldLandmarks,
-            webcam.previousAngles,
-            (angles: JointAngles) => setPreviousAngles("webcam", angles)
-          );
-
-          const fps = lastFrameTime.current
-            ? Math.round(1000 / (detectStartTime - lastFrameTime.current))
-            : 0;
-          lastFrameTime.current = detectStartTime;
-
-          const poseClass = classifyPoseWithVectorized(data);
-
-          const latency = Math.round(performance.now() - detectStartTime);
-
-          setWebcamData(
-            landmarks,
-            angles,
-            fps,
-            data,
-            poseClass.bestPose,
-            latency
-          );
-
-          drawSkeleton(ctx, landmarks);
-        }
-      }
-    }
-
-    if (isActive) {
-      animationRef.current = requestAnimationFrame(detectLoop);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, landmarker, setWebcamData, videoRef]);
+  const { webcam, setWebcamData } = usePoseStore();
 
   useEffect(() => {
-    if (isActive && isInitialized && videoRef.current) {
-      detectLoop();
+    const worker = new Worker(
+      new URL("../workers/pose-worker.js", import.meta.url),
+      { type: "module" }
+    );
+    workerRef.current = worker;
+
+    worker.onmessage = (event) => {
+      const { type, landmarks, angles, poseClass, fps, latency, vectorized } =
+        event.data;
+
+      if (type === "INITIALIZED") {
+        setIsWorkerInitialized(true);
+      } else if (type === "RESULT" && landmarks) {
+        // 워커에서 받은 결과는 저장만 하고, 드로잉은 detectLoop 내에서 실행
+        lastDrawnLandmarks.current = landmarks;
+
+        // Store에 분석 결과 저장
+        setWebcamData(landmarks, angles, fps, vectorized, poseClass, latency);
+      }
+    };
+
+    // 워커에게 초기화 요청을 보냅니다.
+    worker.postMessage({ type: "INIT" });
+
+    return () => {
+      worker.terminate();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 감지 루프 시작/중지
+  useEffect(() => {
+    if (isActive && isWorkerInitialized && videoRef.current) {
+      const loopWrapper = (timestamp: number) => {
+        detectLoop(timestamp);
+      };
+      animationRef.current = requestAnimationFrame(loopWrapper);
     } else if (!isActive && animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -145,7 +87,75 @@ export function useWebcamCanvas({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, isInitialized]);
+  }, [isActive, isWorkerInitialized]);
+
+  // 메인 스레드 detectLoop (렌더링 및 전송 담당)
+  const detectLoop = useCallback(
+    async (now: number) => {
+      const videoElement = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      const worker = workerRef.current;
+
+      if (
+        !videoElement ||
+        !canvas ||
+        !ctx ||
+        !worker ||
+        !isActive ||
+        !videoElement.videoWidth
+      ) {
+        animationRef.current = requestAnimationFrame(detectLoop);
+        return;
+      }
+
+      const FRAME_INTERVAL = 33; // 30 FPS 목표 (1000ms / 30 = 33.3ms)
+      const shouldDetect = now - lastDetectionTime.current >= FRAME_INTERVAL;
+
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+
+      // 1. 비디오 프레임 렌더링 (60 FPS 유지)
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.translate(-canvas.width, 0);
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      // 2. 이전 프레임의 결과 스켈레톤 드로잉 (끊김 방지)
+      if (lastDrawnLandmarks.current) {
+        drawSkeleton(ctx, lastDrawnLandmarks.current);
+      }
+
+      if (shouldDetect) {
+        try {
+          // 3. ImageBitmap 생성
+          const imageBitmap = await createImageBitmap(videoElement);
+
+          // 4. 워커로 전송
+          worker.postMessage(
+            {
+              type: "DETECT",
+              imageBitmap,
+              timestamp: now,
+              previousAngles: webcam.previousAngles,
+              lastFrameTime: lastDetectionTime.current,
+            },
+            [imageBitmap]
+          );
+
+          lastDetectionTime.current = now;
+        } catch (e) {
+          console.error("Webcam Worker communication failed:", e);
+        }
+      }
+
+      if (isActive) {
+        animationRef.current = requestAnimationFrame(detectLoop);
+      }
+    },
+    [isActive, videoRef, webcam.previousAngles]
+  );
 
   return { canvasRef };
 }

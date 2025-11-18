@@ -1,21 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePoseStore, useVideoStore } from "@/store";
-import { JointAngles } from "@/types/pose";
 import {
   DrawingUtils,
   NormalizedLandmark,
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
-import {
-  calculateAllAngles,
-  vectorize,
-} from "@/lib/mediapipe/angle-calculator";
-import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 
 interface UseVideoCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
 }
 
 const drawSkeleton = (
@@ -36,17 +28,19 @@ const drawSkeleton = (
   });
 };
 
-export function useVideoCanvas({
-  videoRef,
-  isInitialized,
-  landmarker,
-}: UseVideoCanvasProps) {
+export function useVideoCanvas({ videoRef }: UseVideoCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
-  const lastFrameTime = useRef<number>(0);
+  const lastDetectionTime = useRef<number>(0);
 
-  const { video, setVideoData, setPreviousAngles } = usePoseStore();
+  const workerRef = useRef<Worker | null>(null);
+  const [isWorkerInitialized, setIsWorkerInitialized] = useState(false);
+
+  const { video, setVideoData } = usePoseStore();
   const { source, sourceType, isPlaying } = useVideoStore();
+
+  // 워커에서 마지막으로 수신한 랜드마크를 저장하여 드로잉에 사용
+  const lastDrawnLandmarks = useRef<NormalizedLandmark[] | null>(null);
 
   // 비디오 소스 설정
   useEffect(() => {
@@ -73,10 +67,43 @@ export function useVideoCanvas({
     }
   }, [videoRef, source, sourceType]);
 
+  // Worker 초기화 및 통신 설정
+  useEffect(() => {
+    const worker = new Worker(
+      new URL("../workers/pose-worker.js", import.meta.url),
+      { type: "module" }
+    );
+    workerRef.current = worker;
+
+    worker.onmessage = (event) => {
+      const { type, landmarks, angles, vectorized, poseClass, fps, latency } =
+        event.data;
+
+      if (type === "INITIALIZED") {
+        setIsWorkerInitialized(true);
+      } else if (type === "RESULT" && landmarks) {
+        // 워커에서 받은 결과는 저장만 하고, 드로잉은 detectLoop 내에서 실행
+        lastDrawnLandmarks.current = landmarks;
+
+        // Store에 분석 결과 저장
+        setVideoData(landmarks, angles, fps, vectorized, poseClass, latency);
+      }
+    };
+
+    worker.postMessage({ type: "INIT" });
+
+    return () => {
+      worker.terminate();
+    };
+  }, [setVideoData]);
+
   // 감지 루프 시작/중지
   useEffect(() => {
-    if (isPlaying && isInitialized && videoRef.current && landmarker) {
-      detectLoop();
+    if (isPlaying && isWorkerInitialized && videoRef.current) {
+      const loopWrapper = (timestamp: number) => {
+        detectLoop(timestamp);
+      };
+      animationRef.current = requestAnimationFrame(loopWrapper);
     } else if (!isPlaying && animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -87,74 +114,62 @@ export function useVideoCanvas({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, isInitialized, landmarker]);
+  }, [isPlaying, isWorkerInitialized]);
 
-  const detectLoop = () => {
-    if (!videoRef.current || !canvasRef.current || !landmarker || !isPlaying) {
+  // 메인 스레드 detectLoop (렌더링 및 전송 담당)
+  const detectLoop = async (now: number) => {
+    const videoElement = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    const worker = workerRef.current;
+
+    if (
+      !videoElement ||
+      !canvas ||
+      !ctx ||
+      !worker ||
+      !videoElement.videoWidth ||
+      !videoElement.videoHeight ||
+      videoElement.readyState !== videoElement.HAVE_ENOUGH_DATA
+    ) {
       animationRef.current = requestAnimationFrame(detectLoop);
       return;
     }
 
-    const videoElement = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const FRAME_INTERVAL = 33; // 30 FPS 목표 (1000ms / 30 = 33.3ms)
+    const shouldDetect = now - lastDetectionTime.current >= FRAME_INTERVAL;
 
-    if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA && ctx) {
-      if (videoElement.videoWidth <= 0 || videoElement.videoHeight <= 0) {
-        animationRef.current = requestAnimationFrame(detectLoop);
-        return;
-      }
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
 
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
+    // 1. 비디오 프레임 렌더링 (60 FPS 유지)
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    // 2. 이전 프레임의 결과 스켈레톤 드로잉 (끊김 방지)
+    if (lastDrawnLandmarks.current) {
+      drawSkeleton(ctx, lastDrawnLandmarks.current);
+    }
 
-      const detectStartTime = performance.now();
-      const results = landmarker.detectForVideo(videoElement, detectStartTime);
+    if (shouldDetect) {
+      try {
+        // 3. ImageBitmap 생성
+        const imageBitmap = await createImageBitmap(videoElement);
 
-      if (results.landmarks && results.landmarks.length > 0) {
-        const landmarks = results.landmarks[0];
-        const worldLandmarks = results.worldLandmarks?.[0];
-
-        const data = vectorize(
-          landmarks,
-          videoElement.videoHeight,
-          videoElement.videoWidth
+        // 4. 워커로 전송
+        worker.postMessage(
+          {
+            type: "DETECT",
+            imageBitmap,
+            timestamp: now,
+            previousAngles: video.previousAngles,
+            lastFrameTime: lastDetectionTime.current,
+          },
+          [imageBitmap]
         );
 
-        if (worldLandmarks) {
-          const angles = calculateAllAngles(
-            worldLandmarks,
-            video.previousAngles,
-            (angles: JointAngles) => setPreviousAngles("video", angles)
-          );
-
-          const fps = lastFrameTime.current
-            ? Math.round(1000 / (detectStartTime - lastFrameTime.current))
-            : 0;
-          lastFrameTime.current = detectStartTime;
-
-          // 포즈 분류
-          const poseClass = classifyPoseWithVectorized(data, angles);
-
-          // 전체 처리 시간 계산 (ms)
-          const latency = Math.round(performance.now() - detectStartTime);
-
-          // Store에 저장
-          setVideoData(
-            landmarks,
-            angles,
-            fps,
-            data,
-            poseClass.bestPose,
-            latency
-          );
-
-          drawSkeleton(ctx, landmarks);
-        } else {
-          drawSkeleton(ctx, landmarks);
-        }
+        lastDetectionTime.current = now;
+      } catch (e) {
+        console.error("Worker communication failed:", e);
       }
     }
 

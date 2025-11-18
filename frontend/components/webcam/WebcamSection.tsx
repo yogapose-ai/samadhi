@@ -1,11 +1,8 @@
-import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { WebcamCanvas } from "@/components/webcam";
 
 interface WebcamSectionProps {
   webcamVideoRef: React.RefObject<HTMLVideoElement | null>;
   isWebcamActive: boolean;
-  isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
   containerWidth: string;
   isHidden: boolean;
 }
@@ -13,8 +10,6 @@ interface WebcamSectionProps {
 export function WebcamSection({
   webcamVideoRef,
   isWebcamActive,
-  isInitialized,
-  landmarker,
   containerWidth,
   isHidden,
 }: WebcamSectionProps) {
@@ -28,12 +23,7 @@ export function WebcamSection({
       }}
     >
       <div className='w-full max-w-full'>
-        <WebcamCanvas
-          videoRef={webcamVideoRef}
-          isActive={isWebcamActive}
-          isInitialized={isInitialized}
-          landmarker={landmarker}
-        />
+        <WebcamCanvas videoRef={webcamVideoRef} isActive={isWebcamActive} />
       </div>
     </div>
   );
