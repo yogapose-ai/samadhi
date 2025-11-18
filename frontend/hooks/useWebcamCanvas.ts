@@ -117,7 +117,7 @@ export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
 
       // 1. 비디오 프레임 렌더링 (60 FPS 유지)
       ctx.save();
-      ctx.scale(-1, 1);
+
       ctx.translate(-canvas.width, 0);
       ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
       ctx.restore();

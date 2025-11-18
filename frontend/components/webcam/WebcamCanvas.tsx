@@ -22,7 +22,10 @@ export function WebcamCanvas({ videoRef, isActive }: WebcamCanvasProps) {
         playsInline
         muted
       />
-      <canvas ref={canvasRef} className='object-contain w-full h-full' />
+      <canvas
+        ref={canvasRef}
+        className='object-contain w-full h-full scale-x-[-1]'
+      />
       {!isActive && (
         <div className='absolute inset-0 flex items-center justify-center'>
           <div className='text-center text-gray-400'>
