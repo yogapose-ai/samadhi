@@ -3,20 +3,20 @@
 import { useRef, useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { usePoseStore, useVideoStore, useWebcamStore } from "@/store";
-import { FiSettings, FiX } from "react-icons/fi";
 import { toast } from "sonner";
-import api from "@/lib/axios";
 import { calculateSimilarity } from "@/lib/mediapipe/angle-calculator";
+import { calculateContainerWidths } from "@/lib/workout/utils";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { useWorkoutExit } from "@/hooks/uswWorkoutExit";
 import { TimelineClipper, TimelineClipperRef } from "@/components/timeline";
-import { Button } from "@/components/ui/button";
-import { VideoCanvas, VideoControls } from "@/components/video";
-import { WebcamCanvas } from "@/components/webcam";
+import { VideoSection } from "@/components/video";
+import { WebcamSection } from "@/components/webcam";
 import {
   ExitConfirmModal,
   ModelLoadingOverlay,
   PerformanceMonitor,
   SimilarityDisplay,
+  WorkoutHeader,
   WorkoutSettingsModal,
 } from "@/components/workout";
 
@@ -211,8 +211,6 @@ function WorkoutContent() {
   const webcamVideoRef = useRef<HTMLVideoElement | null>(null);
   const timelineClipperRef = useRef<TimelineClipperRef>(null);
   const webcamStream = useWebcamStore((state) => state.stream);
-  const workoutStartTimeRef = useRef<number>(Date.now());
-
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settings, setSettings] = useState({
@@ -220,12 +218,19 @@ function WorkoutContent() {
     hideWebcam: false,
     videoSize: 50,
   });
-  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+
   const isScreenShare = sourceType === "stream";
   const isReady = isSetupComplete && isInitialized;
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { isWebcamActive } = useWebcamLifecycle(isReady);
+
+  const {
+    isSubmitting,
+    isExitModalOpen,
+    handleExit,
+    handleCancelExit,
+    handleConfirmExit,
+  } = useWorkoutExit(timelineClipperRef);
 
   useScreenShareMonitor(isScreenShare, source, () => {
     setTimeout(() => router.back(), 500);
@@ -275,85 +280,6 @@ function WorkoutContent() {
     };
   }, []);
 
-  const handleExit = () => setIsExitModalOpen(true);
-
-  const handleConfirmExit = async () => {
-    try {
-      setIsSubmitting(true);
-
-      // 타임라인 데이터 가져오기
-      const timelines = timelineClipperRef.current?.getTimelines() || [];
-      const startTime =
-        timelineClipperRef.current?.getStartTime() ||
-        workoutStartTimeRef.current;
-
-      if (timelines.length === 0) {
-        toast.error("저장할 운동 데이터가 없습니다.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 운동 시간 계산 (분 단위)
-      const endTime = Date.now();
-      const workingoutTime = Math.floor((endTime - startTime) / 1000 / 60);
-
-      // 총 점수 계산 (평균 유사도)
-      const totalScore = Math.round(
-        timelines.reduce((sum, t) => sum + t.similarity, 0) / timelines.length
-      );
-
-      // 유튜브 URL (현재는 source를 URL로 사용, 스크린 공유인 경우 처리)
-      const youtubeUrl =
-        sourceType === "url" && typeof source === "string"
-          ? source
-          : sourceType === "stream"
-          ? "screen-share"
-          : "";
-
-      // 타임라인 데이터 변환 (첫 시작 시간 기준 상대 시간)
-      const timelineData = timelines.map((timeline) => {
-        const startTimeSec = Math.floor(
-          (timeline.startTime - startTime) / 1000
-        );
-        const endTimeSec = Math.floor(
-          ((timeline.endTime || Date.now()) - startTime) / 1000
-        );
-
-        return {
-          youtube_start_sec: startTimeSec,
-          youtube_end_sec: endTimeSec,
-          pose: timeline.pose,
-          score: Math.round(timeline.similarity),
-        };
-      });
-
-      // 서버에 전송할 데이터 (백엔드 형식에 맞춤)
-      const recordData = {
-        datetime: new Date().toISOString(),
-        workingout_time: workingoutTime,
-        youtube_url: youtubeUrl,
-        total_score: totalScore,
-        timeLineList: timelineData, // 백엔드 RecordRequest의 필드명과 일치
-      };
-
-      // API 호출
-      const res = await api.post("/api/record/", recordData);
-
-      const newId = res?.data?.message?.id; // 백엔드 응답 키에 맞춰 조정
-
-      if (newId) {
-        toast.success("운동 기록이 저장되었습니다.");
-        router.push(`/record?openId=${newId}`); // ✅ 목록을 거치지 않고 곧바로 상세
-        return;
-      }
-    } catch (error: any) {
-      // console.error("운동 기록 저장 실패:", error);
-      toast.error(
-        error.response?.data?.message || "운동 기록 저장에 실패했습니다."
-      );
-      setIsSubmitting(false);
-    }
-  };
   const handleTogglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -371,104 +297,42 @@ function WorkoutContent() {
   const P2 = video.vectorized;
   const similarityValue = calculateSimilarity(P1, P2);
 
-  const videoContainerWidth = !settings.hideVideo
-    ? settings.hideWebcam
-      ? "100%"
-      : `${settings.videoSize}%`
-    : "0%";
-
-  const webcamContainerWidth = !settings.hideWebcam
-    ? settings.hideVideo
-      ? "100%"
-      : `${100 - settings.videoSize}%`
-    : "0%";
+  const { videoContainerWidth, webcamContainerWidth } =
+    calculateContainerWidths(settings);
 
   return (
     <div className='flex flex-col h-screen bg-black text-white'>
-      {/* 모델 로딩 오버레이 */}
       <ModelLoadingOverlay />
 
-      <header className='flex items-center justify-between px-4 py-2 bg-black/80 backdrop-blur-sm z-40 shrink-0'>
-        <Button
-          variant='outline'
-          onClick={() => setIsSettingsOpen(true)}
-          disabled={!isReady}
-          className='flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-50'
-        >
-          <FiSettings className='w-4 h-4' />
-          <span className='hidden sm:inline'>설정</span>
-        </Button>
-
-        <div className='flex-1'></div>
-
-        <Button
-          variant='outline'
-          onClick={handleExit}
-          disabled={!isReady}
-          className='flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:text-white hover:bg-red-600 hover:border-red-600 disabled:opacity-50'
-        >
-          <FiX className='w-4 h-4' />
-          <span className='hidden sm:inline'>종료</span>
-        </Button>
-      </header>
+      <WorkoutHeader
+        isReady={isReady}
+        onSettingsClick={() => setIsSettingsOpen(true)}
+        onExitClick={handleExit}
+      />
 
       <main className='flex flex-1 overflow-hidden'>
-        <div
-          className='transition-all duration-300 flex items-start justify-center bg-black h-full pt-8'
-          style={{
-            width: videoContainerWidth,
-            padding: settings.hideVideo ? "0" : "1rem",
-            overflow: "hidden",
-          }}
-        >
-          <div className='w-full max-w-full'>
-            <VideoCanvas
-              videoRef={videoRef}
-              isInitialized={isInitialized}
-              landmarker={videoLandmarker}
-            />
-            {!isScreenShare && (
-              <div className='p-2 bg-black/50 rounded-b-lg'>
-                <VideoControls
-                  isPlaying={isPlaying}
-                  currentTime={currentTime}
-                  duration={duration}
-                  onTogglePlay={handleTogglePlay}
-                  onSeek={handleSeek}
-                />
-              </div>
-            )}
-          </div>
-        </div>
+        <VideoSection
+          videoRef={videoRef}
+          isInitialized={isInitialized}
+          landmarker={videoLandmarker}
+          isScreenShare={isScreenShare}
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          duration={duration}
+          onTogglePlay={handleTogglePlay}
+          onSeek={handleSeek}
+          containerWidth={videoContainerWidth}
+          isHidden={settings.hideVideo}
+        />
 
-        <div
-          className='transition-all duration-300 flex items-start justify-center bg-black h-full pt-8'
-          style={{
-            width: webcamContainerWidth,
-            padding: settings.hideWebcam ? "0" : "1rem",
-            overflow: "hidden",
-          }}
-        >
-          <div className='w-full max-w-full'>
-            <WebcamCanvas
-              videoRef={webcamVideoRef}
-              isActive={isWebcamActive}
-              isInitialized={isInitialized}
-              landmarker={webcamLandmarker}
-            />
-            {!isScreenShare && (
-              <div className='p-2' style={{ visibility: "hidden" }}>
-                <VideoControls
-                  isPlaying={false}
-                  currentTime={0}
-                  duration={0}
-                  onTogglePlay={() => {}}
-                  onSeek={() => {}}
-                />
-              </div>
-            )}
-          </div>
-        </div>
+        <WebcamSection
+          webcamVideoRef={webcamVideoRef}
+          isWebcamActive={isWebcamActive}
+          isInitialized={isInitialized}
+          landmarker={webcamLandmarker}
+          containerWidth={webcamContainerWidth}
+          isHidden={settings.hideWebcam}
+        />
       </main>
 
       <PerformanceMonitor />
@@ -486,11 +350,7 @@ function WorkoutContent() {
 
       <ExitConfirmModal
         isOpen={isExitModalOpen}
-        onClose={() => {
-          if (!isSubmitting) {
-            setIsExitModalOpen(false);
-          }
-        }}
+        onClose={handleCancelExit}
         onConfirm={handleConfirmExit}
         isSubmitting={isSubmitting}
       />
