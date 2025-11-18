@@ -20,7 +20,6 @@ interface UseWebcamCanvasProps {
   landmarker: PoseLandmarker | null;
 }
 
-// 스켈레톤 그리기
 const drawSkeleton = (
   ctx: CanvasRenderingContext2D,
   landmarks: NormalizedLandmark[]
@@ -77,14 +76,8 @@ export function useWebcamCanvas({
       ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
       ctx.restore();
 
-      // console.log('비디오 좌표', videoLandmarks);
-      // console.log('벡터', vec);
-
-      // 포즈 감지
       const detectStartTime = performance.now();
       const results = landmarker.detectForVideo(video, detectStartTime);
-      // const detectEndTime = performance.now();
-      // const detectionLatency = detectEndTime - detectStartTime;
 
       if (results.landmarks && results.landmarks.length > 0) {
         const landmarks = results.landmarks[0];
@@ -105,28 +98,21 @@ export function useWebcamCanvas({
         drawSkeleton(ctx, landmarks);
 
         if (worldLandmarks) {
-          // const totalLatency = performance.now() - detectStartTime;
-
-          // 각도 계산
           const angles = calculateAllAngles(
             worldLandmarks,
             webcam.previousAngles,
             (angles: JointAngles) => setPreviousAngles("webcam", angles)
           );
 
-          // FPS 계산
           const fps = lastFrameTime.current
             ? Math.round(1000 / (detectStartTime - lastFrameTime.current))
             : 0;
           lastFrameTime.current = detectStartTime;
 
-          // 포즈 분류
           const poseClass = classifyPoseWithVectorized(data);
 
-          // 전체 처리 시간 계산 (ms)
           const latency = Math.round(performance.now() - detectStartTime);
 
-          // Store에 저장
           setWebcamData(
             landmarks,
             angles,
@@ -136,23 +122,8 @@ export function useWebcamCanvas({
             latency
           );
 
-          // 스켈레톤 그리기
           drawSkeleton(ctx, landmarks);
-        } else {
-          // 포즈 감지 안 되면 알림
-          // ctx.fillStyle = "#FF0000";
-          // ctx.font = "bold 20px Arial";
-          // ctx.fillText(
-          //   "포즈가 감지되지 않았습니다. 전신을 보여주세요!",
-          //   20,
-          //   40
-          // );
         }
-      } else {
-        // 랜드마크 없으면 알림
-        // ctx.fillStyle = "#FFFF00";
-        // ctx.font = "bold 20px Arial";
-        // ctx.fillText("사람을 찾는 중...", 20, 40);
       }
     }
 
