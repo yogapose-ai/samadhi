@@ -1,7 +1,7 @@
 "use client";
 
-import { CameraOff } from "lucide-react";
 import { PoseLandmarker } from "@mediapipe/tasks-vision";
+import { CameraOff } from "lucide-react";
 import { useWebcamCanvas } from "@/hooks/useWebcamCanvas";
 
 interface WebcamCanvasProps {

@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiEye, FiEyeOff, FiRefreshCw } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 
 interface WorkoutSettingsModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ interface WorkoutSettingsModalProps {
   }) => void;
 }
 
-export default function WorkoutSettingsModal({
+export function WorkoutSettingsModal({
   isOpen,
   onClose,
   settings,

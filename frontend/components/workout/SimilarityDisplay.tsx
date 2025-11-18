@@ -1,13 +1,11 @@
-import { AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 
 interface SimilarityDisplayProps {
   similarityValue: number;
 }
 
-export default function SimilarityDisplay({
-  similarityValue,
-}: SimilarityDisplayProps) {
+export function SimilarityDisplay({ similarityValue }: SimilarityDisplayProps) {
   const [displayValue, setDisplayValue] = useState(similarityValue);
   const lastUpdateRef = useRef(Date.now());
   const THROTTLE_MS = 500; // 500ms마다 한 번만 업데이트
@@ -32,12 +30,12 @@ export default function SimilarityDisplay({
 
   return (
     <AnimatePresence>
-      <div className="fixed bottom-8 right-8 z-30">
-        <div className="relative bg-transparent backdrop-blur-md rounded-2xl shadow-xl p-8 min-w-[600px]">
-          <div className="text-center text-white/90 font-bold">
-            <div className="text-[70px]">
-              <span className=" mb-3">{feedback.emoji} </span>
-              <span className="">{feedback.text}</span>
+      <div className='fixed bottom-8 right-8 z-30'>
+        <div className='relative bg-transparent backdrop-blur-md rounded-2xl shadow-xl p-8 min-w-[600px]'>
+          <div className='text-center text-white/90 font-bold'>
+            <div className='text-[70px]'>
+              <span className=' mb-3'>{feedback.emoji} </span>
+              <span className=''>{feedback.text}</span>
             </div>
           </div>
         </div>

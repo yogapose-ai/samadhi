@@ -26,7 +26,7 @@ export function useMediaPipe() {
             minPosePresenceConfidence: 0.5,
             minTrackingConfidence: 0.5,
             outputSegmentationMasks: false,
-            runningMode: "VIDEO" as "VIDEO",
+            runningMode: "VIDEO" as const,
           };
           return PoseLandmarker.createFromOptions(vision, options);
         };

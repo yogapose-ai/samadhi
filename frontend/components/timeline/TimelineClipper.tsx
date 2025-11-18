@@ -1,10 +1,10 @@
 "use client";
 
-import { CalculateSimilarity } from "@/lib/mediapipe/angle-calculator";
-import { usePoseStore } from "@/store/poseStore";
 import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { calculateSimilarity } from "@/lib/mediapipe/angle-calculator";
+import { usePoseStore } from "@/store/poseStore";
 
 export type Timeline = {
   pose: string;
@@ -18,7 +18,7 @@ export type TimelineClipperRef = {
   getStartTime: () => number;
 };
 
-const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
+export const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
   const { video, webcam } = usePoseStore();
   const [currentPose, setCurrentPose] = useState<string>("unknown");
   const [timelines, setTimelines] = useState<Timeline[]>([]);
@@ -56,13 +56,14 @@ const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
         setCurrentPose(video.poseClass);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video.poseClass]);
 
   useEffect(() => {
     if (timelines.length === 0) return;
     const lastTimeline = timelines[timelines.length - 1];
     if (lastTimeline.endTime === 0) {
-      const similarity = CalculateSimilarity(
+      const similarity = calculateSimilarity(
         webcam.vectorized,
         video.vectorized
       );
@@ -115,62 +116,62 @@ const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-8 left-8 z-30"
+            className='fixed bottom-8 left-8 z-30'
           >
-            <div className="relative bg-white/95 backdrop-blur-md rounded-2xl border border-gray-200/50 p-5 min-w-[280px] max-w-[600px]">
+            <div className='relative bg-white/95 backdrop-blur-md rounded-2xl border border-gray-200/50 p-5 min-w-[280px] max-w-[600px]'>
               <button
                 onClick={() => setShowSimilarity(false)}
-                className="absolute -top-2 -right-2 w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors "
-                aria-label="목록 닫기"
+                className='absolute -top-2 -right-2 w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors '
+                aria-label='목록 닫기'
               >
-                <FiEyeOff className="w-4 h-4 text-white" />
+                <FiEyeOff className='w-4 h-4 text-white' />
               </button>
 
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              <h3 className='text-sm font-semibold text-gray-900 mb-3'>
                 자세 타임라인별 유사도
               </h3>
 
-              <div className="overflow-x-auto">
-                <div className="flex gap-3 pb-2 min-h-[140px]">
+              <div className='overflow-x-auto'>
+                <div className='flex gap-3 pb-2 min-h-[140px]'>
                   {timelines.map((item, idx) => (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="flex flex-col min-w-[140px] bg-gray-50 rounded-xl p-3 border border-gray-200"
+                      className='flex flex-col min-w-[140px] bg-gray-50 rounded-xl p-3 border border-gray-200'
                     >
                       {/* 자세 이름 */}
-                      <div className="w-full h-10 bg-linear-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mb-3">
-                        <span className="text-sm font-bold text-white truncate px-2">
+                      <div className='w-full h-10 bg-linear-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mb-3'>
+                        <span className='text-sm font-bold text-white truncate px-2'>
                           {item.pose}
                         </span>
                       </div>
 
                       {/* 시간 정보 */}
-                      <div className="space-y-2 mb-3">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 font-medium">
+                      <div className='space-y-2 mb-3'>
+                        <div className='flex items-center justify-between text-xs'>
+                          <span className='text-gray-500 font-medium'>
                             시작
                           </span>
-                          <span className="text-gray-900 font-semibold">
+                          <span className='text-gray-900 font-semibold'>
                             {formatRelativeTime(item.startTime, firstStartTime)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 font-medium">
+                        <div className='flex items-center justify-between text-xs'>
+                          <span className='text-gray-500 font-medium'>
                             종료
                           </span>
-                          <span className="text-gray-900 font-semibold">
+                          <span className='text-gray-900 font-semibold'>
                             {formatRelativeTime(item.endTime, firstStartTime)}
                           </span>
                         </div>
                       </div>
 
                       {/* 유사도 */}
-                      <div className="pt-3 border-t border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500 font-medium">
+                      <div className='pt-3 border-t border-gray-200'>
+                        <div className='flex items-center justify-between'>
+                          <span className='text-xs text-gray-500 font-medium'>
                             유사도
                           </span>
                           <span
@@ -197,9 +198,9 @@ const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setShowSimilarity(true)}
-          className="fixed bottom-8 left-8 z-30 w-12 h-12 bg-linear-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center hover:shadow-lg hover:scale-105 transition-all shadow-md"
+          className='fixed bottom-8 left-8 z-30 w-12 h-12 bg-linear-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center hover:shadow-lg hover:scale-105 transition-all shadow-md'
         >
-          <FiEye className="w-6 h-6 text-white" />
+          <FiEye className='w-6 h-6 text-white' />
         </motion.button>
       )}
     </>
@@ -207,5 +208,3 @@ const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
 });
 
 TimelineClipper.displayName = "TimelineClipper";
-
-export default TimelineClipper;

@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { FiMonitor } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { FiMonitor } from "react-icons/fi";
 import { toast } from "sonner";
 import { useVideoStore } from "@/store/videoStore";
+import { Button } from "@/components/ui/button";
 
 interface StepScreenShareProps {
   onComplete: (isSelected: boolean) => void;
   isSelected: boolean;
 }
 
-export default function StepScreenShare({
+export function StepScreenShare({
   onComplete,
   isSelected,
 }: StepScreenShareProps) {
@@ -25,7 +25,7 @@ export default function StepScreenShare({
       await startScreenShare();
       onComplete(true);
       toast.success("화면 공유가 시작되었습니다.");
-    } catch (error) {
+    } catch {
       // console.error("화면 공유 실패:", error);
       toast.error("화면 공유를 시작하지 못했습니다. 권한을 확인해주세요.");
       onComplete(false);

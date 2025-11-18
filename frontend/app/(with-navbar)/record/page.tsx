@@ -1,22 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dayjs, { Dayjs } from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import api from "@/lib/axios";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
 import {
   Loader2,
   Menu,
@@ -24,6 +11,21 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
 } from "lucide-react";
+import api from "@/lib/axios";
+import { cn } from "@/lib/utils";
+import {
+  Badge,
+  Button,
+  Calendar,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Slider,
+} from "@/components/ui";
 
 dayjs.extend(isBetween);
 
@@ -108,13 +110,13 @@ const CardLikeBox: React.FC<
 const ThumbBox: React.FC<{ url?: string }> = ({ url }) => {
   const src = url ? getThumb(url) : null;
   return (
-    <div className="rounded-lg border bg-muted/20 overflow-hidden">
-      <div className="relative w-full pt-[56.25%]">
+    <div className='rounded-lg border bg-muted/20 overflow-hidden'>
+      <div className='relative w-full pt-[56.25%]'>
         {src && (
           <img
             src={src}
-            alt="YouTube thumbnail"
-            className="absolute inset-0 w-full h-full object-cover"
+            alt='YouTube thumbnail'
+            className='absolute inset-0 w-full h-full object-cover'
           />
         )}
       </div>
@@ -239,6 +241,7 @@ const WorkoutDashboard: React.FC = () => {
 
     // 목록에서 클릭한 것과 동일하게 상세로 이동
     gotoDetail(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openId, allRecords, loading, router, sp]);
 
   const applyFilters = () => {
@@ -277,6 +280,7 @@ const WorkoutDashboard: React.FC = () => {
           r.mean <= mean[1] &&
           inRange(r.date)
       ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [allRecords, duration, mean, dateRange]
   );
 
@@ -307,22 +311,22 @@ const WorkoutDashboard: React.FC = () => {
 
   /* 사이드바 */
   const FilterSidebar = (
-    <div className="p-4">
-      <div className="flex items-center justify-end mb-2">
+    <div className='p-4'>
+      <div className='flex items-center justify-end mb-2'>
         <Button
-          variant="ghost"
-          size="icon"
+          variant='ghost'
+          size='icon'
           onClick={() => setCollapsed((v) => !v)}
         >
-          <Menu className="h-5 w-5" />
+          <Menu className='h-5 w-5' />
         </Button>
       </div>
 
-      <div className="mx-auto w-full" style={{ maxWidth: 320 }}>
+      <div className='mx-auto w-full' style={{ maxWidth: 320 }}>
         {!collapsed && (
           <Button
             onClick={applyFilters}
-            className="w-full h-10 font-extrabold tracking-tight mb-4 bg-[#0f2552] text-white hover:bg-[#0b1c40]"
+            className='w-full h-10 font-extrabold tracking-tight mb-4 bg-[#0f2552] text-white hover:bg-[#0b1c40]'
           >
             필터 적용
           </Button>
@@ -330,13 +334,13 @@ const WorkoutDashboard: React.FC = () => {
 
         {!collapsed && (
           <>
-            <Card className="w-full mb-3">
-              <CardHeader className="py-3">
-                <CardTitle className="text-base font-bold text-center">
+            <Card className='w-full mb-3'>
+              <CardHeader className='py-3'>
+                <CardTitle className='text-base font-bold text-center'>
                   운동시간 (분)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 pb-4">
+              <CardContent className='pt-0 pb-4'>
                 <Slider
                   value={uiDuration}
                   min={0}
@@ -344,19 +348,19 @@ const WorkoutDashboard: React.FC = () => {
                   step={1}
                   onValueChange={(v) => setUiDuration([v[0] ?? 0, v[1] ?? 0])}
                 />
-                <div className="text-center text-sm text-muted-foreground mt-2">
+                <div className='text-center text-sm text-muted-foreground mt-2'>
                   {uiDuration[0]}분 ~ {uiDuration[1]}분
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="w-full mb-3">
-              <CardHeader className="py-3">
-                <CardTitle className="text-base font-bold text-center">
+            <Card className='w-full mb-3'>
+              <CardHeader className='py-3'>
+                <CardTitle className='text-base font-bold text-center'>
                   유사도 평균 (%)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 pb-4">
+              <CardContent className='pt-0 pb-4'>
                 <Slider
                   value={uiMean}
                   min={0}
@@ -364,32 +368,32 @@ const WorkoutDashboard: React.FC = () => {
                   step={1}
                   onValueChange={(v) => setUiMean([v[0] ?? 0, v[1] ?? 0])}
                 />
-                <div className="text-center text-sm text-muted-foreground mt-2">
+                <div className='text-center text-sm text-muted-foreground mt-2'>
                   {uiMean[0]}% ~ {uiMean[1]}%
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="w-full mb-3">
-              <CardHeader className="py-3">
-                <CardTitle className="text-base font-bold text-center">
+            <Card className='w-full mb-3'>
+              <CardHeader className='py-3'>
+                <CardTitle className='text-base font-bold text-center'>
                   날짜
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0 pb-4">
-                <div className="grid gap-2">
+              <CardContent className='pt-0 pb-4'>
+                <div className='grid gap-2'>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="justify-start">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                      <Button variant='outline' className='justify-start'>
+                        <CalendarIcon className='mr-2 h-4 w-4' />
                         {uiStartDate
                           ? uiStartDate.format("YYYY-MM-DD")
                           : "Start date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
+                    <PopoverContent className='p-0' align='start'>
                       <Calendar
-                        mode="single"
+                        mode='single'
                         selected={uiStartDate?.toDate()}
                         onSelect={(d) => setUiStartDate(d ? dayjs(d) : null)}
                         initialFocus
@@ -399,16 +403,16 @@ const WorkoutDashboard: React.FC = () => {
 
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="justify-start">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                      <Button variant='outline' className='justify-start'>
+                        <CalendarIcon className='mr-2 h-4 w-4' />
                         {uiEndDate
                           ? uiEndDate.format("YYYY-MM-DD")
                           : "End date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
+                    <PopoverContent className='p-0' align='start'>
                       <Calendar
-                        mode="single"
+                        mode='single'
                         selected={uiEndDate?.toDate()}
                         onSelect={(d) => setUiEndDate(d ? dayjs(d) : null)}
                         initialFocus
@@ -416,7 +420,7 @@ const WorkoutDashboard: React.FC = () => {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="text-center text-sm text-muted-foreground mt-2">
+                <div className='text-center text-sm text-muted-foreground mt-2'>
                   {uiStartDate && uiEndDate
                     ? `${uiStartDate.format("YYYY-MM-DD")} ~ ${uiEndDate.format(
                         "YYYY-MM-DD"
@@ -437,11 +441,11 @@ const WorkoutDashboard: React.FC = () => {
     : "grid-cols-[clamp(56px,20vw,300px)_minmax(0,1fr)]";
 
   return (
-    <div className="w-full">
+    <div className='w-full'>
       <div className={`grid w-full ${gridCols} gap-0`}>
         {/* 사이드바 */}
         <aside
-          className="border-r bg-white"
+          className='border-r bg-white'
           style={{
             position: "sticky",
             top: 0,
@@ -454,24 +458,24 @@ const WorkoutDashboard: React.FC = () => {
         </aside>
 
         {/* 메인 */}
-        <main className="relative bg-muted/30 px-4 sm:px-6 lg:px-8 py-6">
+        <main className='relative bg-muted/30 px-4 sm:px-6 lg:px-8 py-6'>
           {loading && (
-            <div className="fixed inset-0 z-10 flex items-center justify-center bg-background/50">
-              <div className="flex items-center gap-2 rounded-md border bg-background px-4 py-2 shadow-sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">불러오는 중...</span>
+            <div className='fixed inset-0 z-10 flex items-center justify-center bg-background/50'>
+              <div className='flex items-center gap-2 rounded-md border bg-background px-4 py-2 shadow-sm'>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                <span className='text-sm'>불러오는 중...</span>
               </div>
             </div>
           )}
 
           {filtered.length === 0 ? (
-            <div className="min-h-[40svh] flex items-center justify-center">
-              <Card className="w-full max-w-md">
+            <div className='min-h-[40svh] flex items-center justify-center'>
+              <Card className='w-full max-w-md'>
                 <CardHeader>
                   <CardTitle>조건에 맞는 기록이 없습니다</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
+                  <p className='text-sm text-muted-foreground'>
                     필터를 조정하거나 기간을 넓혀보세요.
                   </p>
                 </CardContent>
@@ -484,30 +488,30 @@ const WorkoutDashboard: React.FC = () => {
                 className={`grid grid-cols-4 gap-4 [grid-auto-rows:${CARD_ROW_H}px]`}
               >
                 {pageItems.map((r) => (
-                  <div key={r.id} className="h-full">
+                  <div key={r.id} className='h-full'>
                     <CardLikeBox onClick={() => gotoDetail(r)}>
                       {/* 위 정보 영역 */}
-                      <div className="flex flex-col gap-3 min-h-[140px] md:min-h-[160px] xl:min-h-[180px]">
+                      <div className='flex flex-col gap-3 min-h-[140px] md:min-h-[160px] xl:min-h-[180px]'>
                         <div>
-                          <div className="text-[17px] font-semibold mb-2">
+                          <div className='text-[17px] font-semibold mb-2'>
                             운동 정보
                           </div>
 
-                          <div className="flex flex-col items-start gap-2">
+                          <div className='flex flex-col items-start gap-2'>
                             <Badge
-                              variant="secondary"
-                              className="w-fit rounded-full px-3 py-1 text-[14px] whitespace-nowrap"
+                              variant='secondary'
+                              className='w-fit rounded-full px-3 py-1 text-[14px] whitespace-nowrap'
                             >
-                              <span className="opacity-75 font-semibold mr-2">
+                              <span className='opacity-75 font-semibold mr-2'>
                                 날짜 :
                               </span>
                               {r.date}
                             </Badge>
                             <Badge
-                              variant="secondary"
-                              className="w-fit rounded-full px-3 py-1 text-[14px] whitespace-nowrap"
+                              variant='secondary'
+                              className='w-fit rounded-full px-3 py-1 text-[14px] whitespace-nowrap'
                             >
-                              <span className="opacity-75 font-semibold mr-2">
+                              <span className='opacity-75 font-semibold mr-2'>
                                 운동시간 :
                               </span>
                               {Number.isFinite(Number(r.duration))
@@ -517,16 +521,16 @@ const WorkoutDashboard: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="border-t pt-3">
-                          <div className="text-[17px] font-semibold mb-2">
+                        <div className='border-t pt-3'>
+                          <div className='text-[17px] font-semibold mb-2'>
                             기록 정보
                           </div>
-                          <div className="flex flex-wrap gap-2.5">
+                          <div className='flex flex-wrap gap-2.5'>
                             <Badge
-                              variant="outline"
-                              className="rounded-full px-3 py-1 text-[14px] whitespace-nowrap"
+                              variant='outline'
+                              className='rounded-full px-3 py-1 text-[14px] whitespace-nowrap'
                             >
-                              <span className="opacity-75 font-semibold mr-2">
+                              <span className='opacity-75 font-semibold mr-2'>
                                 유사도 평균 :
                               </span>
                               {r.mean.toFixed(1)}%
@@ -536,42 +540,42 @@ const WorkoutDashboard: React.FC = () => {
                       </div>
 
                       {/* 썸네일 */}
-                      <div className="mt-auto pt-3">
+                      <div className='mt-auto pt-3'>
                         <ThumbBox url={r.youtubeUrl} />
                       </div>
 
-                      <div className="flex-1" />
+                      <div className='flex-1' />
                     </CardLikeBox>
                   </div>
                 ))}
               </div>
 
               {/* 페이지네이션 */}
-              <div className="flex items-center justify-center gap-2 mt-4">
+              <div className='flex items-center justify-center gap-2 mt-4'>
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant='outline'
+                  size='icon'
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className='h-4 w-4' />
                 </Button>
-                <div className="text-sm text-muted-foreground select-none">
+                <div className='text-sm text-muted-foreground select-none'>
                   Page{" "}
-                  <span className="font-semibold text-foreground">
+                  <span className='font-semibold text-foreground'>
                     {currentPage}
                   </span>{" "}
                   / {totalPages}
                 </div>
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant='outline'
+                  size='icon'
                   disabled={currentPage >= totalPages}
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className='h-4 w-4' />
                 </Button>
               </div>
             </>

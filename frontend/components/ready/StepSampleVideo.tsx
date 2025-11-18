@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import api from "@/lib/axios";
+import { Button } from "@/components/ui/button";
 
 interface SampleVideo {
   id: number;
@@ -14,10 +14,10 @@ interface SampleVideo {
 }
 
 interface StepSampleVideoProps {
-  onComplete: (video: { title: string; path: string } | null) => void; 
+  onComplete: (video: { title: string; path: string } | null) => void;
 }
 
-export default function StepSampleVideo({ onComplete }: StepSampleVideoProps) {
+export function StepSampleVideo({ onComplete }: StepSampleVideoProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [videos, setVideos] = useState<SampleVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);

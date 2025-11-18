@@ -1,13 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import useAuthStore from "@/store/authStore";
+import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
-  const router = useRouter();
   const { isLoggedIn, nickname } = useAuthStore();
 
   return (

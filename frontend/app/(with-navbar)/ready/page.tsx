@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useVideoStore } from "@/store/videoStore";
-import StepChoice from "@/components/ready/StepChoice";
-import StepConfirmation from "@/components/ready/StepConfirmation";
-import Stepper from "@/components/ready/Stepper";
-import StepSampleVideo from "@/components/ready/StepSampleVideo";
-import StepScreenShare from "@/components/ready/StepScreenShare";
-import StepWebcam from "@/components/ready/StepWebcam";
+import {
+  StepChoice,
+  StepConfirmation,
+  Stepper,
+  StepScreenShare,
+  StepWebcam,
+  StepSampleVideo,
+} from "@/components/ready";
 
 export default function ReadyPage() {
   const [currentStep, setCurrentStep] = useState(1);

@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { FiMonitor, FiVideo } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 
 interface StepChoiceProps {
   onSelectType: (type: "screen" | "sample") => void;
 }
 
-export default function StepChoice({ onSelectType }: StepChoiceProps) {
+export function StepChoice({ onSelectType }: StepChoiceProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

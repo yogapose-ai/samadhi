@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const router = useRouter();

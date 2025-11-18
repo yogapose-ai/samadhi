@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePoseStore, useVideoStore } from "@/store";
+import { JointAngles } from "@/types/pose";
 import {
   DrawingUtils,
   NormalizedLandmark,
@@ -11,9 +13,6 @@ import {
   calculateAllAngles,
   vectorize,
 } from "@/lib/mediapipe/angle-calculator";
-import { usePoseStore } from "@/store/poseStore";
-import { JointAngles } from "@/types/pose";
-import { useVideoStore } from "@/store/videoStore";
 import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 
 interface VideoCanvasProps {
@@ -176,11 +175,11 @@ export function VideoCanvas({
   };
 
   return (
-    <div className="relative overflow-hidden bg-black rounded-lg aspect-video">
+    <div className='relative overflow-hidden bg-black rounded-lg aspect-video'>
       <video
         ref={videoRef}
-        className="absolute inset-0 object-contain w-full h-full opacity-0"
-        crossOrigin="anonymous"
+        className='absolute inset-0 object-contain w-full h-full opacity-0'
+        crossOrigin='anonymous'
         autoPlay
         muted
         playsInline
@@ -188,13 +187,13 @@ export function VideoCanvas({
       />
       <canvas
         ref={canvasRef}
-        className="object-contain w-full h-full"
+        className='object-contain w-full h-full'
         style={{ display: sourceType !== "none" ? "block" : "none" }}
       />
       {sourceType === "none" && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-gray-400">
-            <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
+        <div className='absolute inset-0 flex items-center justify-center'>
+          <div className='text-center text-gray-400'>
+            <Video className='w-16 h-16 mx-auto mb-4 opacity-50' />
             <p>감지할 비디오를 선택하세요</p>
           </div>
         </div>

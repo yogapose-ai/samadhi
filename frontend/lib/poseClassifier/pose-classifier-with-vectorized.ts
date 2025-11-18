@@ -1,10 +1,8 @@
-import { poseVectorizedData } from "@/types/poseVectorizedData";
+import { JointAngles, poseData, poseVectorizedData } from "@/types";
 import {
-  CalculateSimilarity,
+  calculateSimilarity,
   LANDMARK_INDICES,
 } from "../mediapipe/angle-calculator";
-import { JointAngles } from "@/types/pose";
-import { poseData } from "@/types/poseData";
 
 export function classifyPoseWithVectorized(
   vectorized: number[],
@@ -23,7 +21,7 @@ export function classifyPoseWithVectorized(
   for (const [name, poseVectorized] of Object.entries(poseVectorizedData)) {
     const poseAngles = poseData[name as keyof typeof poseData];
     const calcVecDistance = (a: number[]) => {
-      const similarity = CalculateSimilarity(poseVectorized, a, 1);
+      const similarity = calculateSimilarity(poseVectorized, a, 1);
 
       // 100에 가까울 수록 유사, 0에 가까울수록 다름
       return similarity;

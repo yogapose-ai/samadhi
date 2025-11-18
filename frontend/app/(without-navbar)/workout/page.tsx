@@ -2,26 +2,23 @@
 
 import { useRef, useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useMediaPipe } from "@/hooks/useMediaPipe";
-import { WebcamCanvas } from "@/components/webcam/WebcamCanvas";
-import { Button } from "@/components/ui/button";
-import { usePoseStore } from "@/store/poseStore";
-import { useVideoStore } from "@/store/videoStore";
-import { useWebcamStore } from "@/store/webcamStore";
+import { usePoseStore, useVideoStore, useWebcamStore } from "@/store";
 import { FiSettings, FiX } from "react-icons/fi";
-import WorkoutSettingsModal from "@/components/workout/WorkoutSettingsModal";
-import { CalculateSimilarity } from "@/lib/mediapipe/angle-calculator";
-import { VideoCanvas } from "@/components/video/VideoCanvas";
-import { VideoControls } from "@/components/video/VideoControls";
-import ExitConfirmModal from "@/components/workout/ExitConfirmModal";
 import { toast } from "sonner";
-import TimelineClipper, {
-  type TimelineClipperRef,
-} from "@/components/timeline/TimelineClipper";
-import SimilarityDisplay from "@/components/workout/SimilarityDisplay";
 import api from "@/lib/axios";
-import { PerformanceMonitor } from "@/components/workout/PerformanceMonitor";
-import { ModelLoadingOverlay } from "@/components/workout/ModelLoadingOverlay";
+import { calculateSimilarity } from "@/lib/mediapipe/angle-calculator";
+import { useMediaPipe } from "@/hooks/useMediaPipe";
+import { TimelineClipper, TimelineClipperRef } from "@/components/timeline";
+import { Button } from "@/components/ui/button";
+import { VideoCanvas, VideoControls } from "@/components/video";
+import { WebcamCanvas } from "@/components/webcam";
+import {
+  ExitConfirmModal,
+  ModelLoadingOverlay,
+  PerformanceMonitor,
+  SimilarityDisplay,
+  WorkoutSettingsModal,
+} from "@/components/workout";
 
 function useWebcamLifecycle(isReady: boolean) {
   const startWebcam = useWebcamStore((state) => state.startWebcam);
@@ -31,7 +28,7 @@ function useWebcamLifecycle(isReady: boolean) {
   useEffect(() => {
     // 모델이 완전히 로드된 후에만 웹캠 시작
     if (isReady) {
-      console.log("✅ 모델 로딩 완료, 웹캠 시작");
+      // console.log("✅ 모델 로딩 완료, 웹캠 시작");
       startWebcam();
       return () => {
         stopWebcam();
@@ -164,14 +161,14 @@ function useWebcamVideoElement(
           await video.play();
         }
 
-        console.log(`웹캠 비디오 재생 성공 (시도 ${retry + 1})`);
-      } catch (error) {
-        console.warn(`웹캠 설정 실패 (시도 ${retry + 1}):`, error);
+        // console.log(`웹캠 비디오 재생 성공 (시도 ${retry + 1})`);
+      } catch {
+        // console.warn(`웹캠 설정 실패 (시도 ${retry + 1}):`, error);
 
         if (retry < 10 && mounted) {
           retryTimeout = setTimeout(() => setupVideo(retry + 1), 300);
         } else {
-          console.error("웹캠 설정 최종 실패:", error);
+          // console.error("웹캠 설정 최종 실패:", error);
           toast.error("웹캠 연결에 실패했습니다. 페이지를 새로고침해주세요.");
         }
       }
@@ -193,6 +190,7 @@ function useWebcamVideoElement(
         }
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webcamStream, isWebcamActive, webcamVideoRef]);
 }
 
@@ -263,7 +261,7 @@ function WorkoutContent() {
 
   useEffect(() => {
     if (source && isInitialized) {
-      console.log("✅ Source와 모델 초기화 완료");
+      // console.log("✅ Source와 모델 초기화 완료");
       setIsSetupComplete(true);
     }
   }, [source, isInitialized]);
@@ -349,7 +347,7 @@ function WorkoutContent() {
         return;
       }
     } catch (error: any) {
-      console.error("운동 기록 저장 실패:", error);
+      // console.error("운동 기록 저장 실패:", error);
       toast.error(
         error.response?.data?.message || "운동 기록 저장에 실패했습니다."
       );
@@ -359,7 +357,7 @@ function WorkoutContent() {
   const handleTogglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
-    video.paused ? video.play() : video.pause();
+    void (video.paused ? video.play() : video.pause());
   };
 
   const handleSeek = (time: number) => {
@@ -371,7 +369,7 @@ function WorkoutContent() {
 
   const P1 = webcam.vectorized;
   const P2 = video.vectorized;
-  const similarityValue = CalculateSimilarity(P1, P2);
+  const similarityValue = calculateSimilarity(P1, P2);
 
   const videoContainerWidth = !settings.hideVideo
     ? settings.hideWebcam
@@ -386,51 +384,51 @@ function WorkoutContent() {
     : "0%";
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white">
+    <div className='flex flex-col h-screen bg-black text-white'>
       {/* 모델 로딩 오버레이 */}
       <ModelLoadingOverlay />
 
-      <header className="flex items-center justify-between px-4 py-2 bg-black/80 backdrop-blur-sm z-40 shrink-0">
+      <header className='flex items-center justify-between px-4 py-2 bg-black/80 backdrop-blur-sm z-40 shrink-0'>
         <Button
-          variant="outline"
+          variant='outline'
           onClick={() => setIsSettingsOpen(true)}
           disabled={!isReady}
-          className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-50"
+          className='flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-50'
         >
-          <FiSettings className="w-4 h-4" />
-          <span className="hidden sm:inline">설정</span>
+          <FiSettings className='w-4 h-4' />
+          <span className='hidden sm:inline'>설정</span>
         </Button>
 
-        <div className="flex-1"></div>
+        <div className='flex-1'></div>
 
         <Button
-          variant="outline"
+          variant='outline'
           onClick={handleExit}
           disabled={!isReady}
-          className="flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:text-white hover:bg-red-600 hover:border-red-600 disabled:opacity-50"
+          className='flex items-center justify-center gap-2 w-20 bg-white/10 border-white/20 text-white hover:text-white hover:bg-red-600 hover:border-red-600 disabled:opacity-50'
         >
-          <FiX className="w-4 h-4" />
-          <span className="hidden sm:inline">종료</span>
+          <FiX className='w-4 h-4' />
+          <span className='hidden sm:inline'>종료</span>
         </Button>
       </header>
 
-      <main className="flex flex-1 overflow-hidden">
+      <main className='flex flex-1 overflow-hidden'>
         <div
-          className="transition-all duration-300 flex items-start justify-center bg-black h-full pt-8"
+          className='transition-all duration-300 flex items-start justify-center bg-black h-full pt-8'
           style={{
             width: videoContainerWidth,
             padding: settings.hideVideo ? "0" : "1rem",
             overflow: "hidden",
           }}
         >
-          <div className="w-full max-w-full">
+          <div className='w-full max-w-full'>
             <VideoCanvas
               videoRef={videoRef}
               isInitialized={isInitialized}
               landmarker={videoLandmarker}
             />
             {!isScreenShare && (
-              <div className="p-2 bg-black/50 rounded-b-lg">
+              <div className='p-2 bg-black/50 rounded-b-lg'>
                 <VideoControls
                   isPlaying={isPlaying}
                   currentTime={currentTime}
@@ -444,14 +442,14 @@ function WorkoutContent() {
         </div>
 
         <div
-          className="transition-all duration-300 flex items-start justify-center bg-black h-full pt-8"
+          className='transition-all duration-300 flex items-start justify-center bg-black h-full pt-8'
           style={{
             width: webcamContainerWidth,
             padding: settings.hideWebcam ? "0" : "1rem",
             overflow: "hidden",
           }}
         >
-          <div className="w-full max-w-full">
+          <div className='w-full max-w-full'>
             <WebcamCanvas
               videoRef={webcamVideoRef}
               isActive={isWebcamActive}
@@ -459,7 +457,7 @@ function WorkoutContent() {
               landmarker={webcamLandmarker}
             />
             {!isScreenShare && (
-              <div className="p-2" style={{ visibility: "hidden" }}>
+              <div className='p-2' style={{ visibility: "hidden" }}>
                 <VideoControls
                   isPlaying={false}
                   currentTime={0}
@@ -504,10 +502,10 @@ export default function WorkoutPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-screen bg-black">
-          <div className="p-8 text-center bg-gray-900 rounded-lg shadow-lg border border-white/10">
-            <div className="w-10 h-10 mx-auto mb-4 border-4 border-blue-400 rounded-full border-t-transparent animate-spin"></div>
-            <p className="text-gray-300">페이지를 불러오는 중...</p>
+        <div className='flex items-center justify-center min-h-screen bg-black'>
+          <div className='p-8 text-center bg-gray-900 rounded-lg shadow-lg border border-white/10'>
+            <div className='w-10 h-10 mx-auto mb-4 border-4 border-blue-400 rounded-full border-t-transparent animate-spin'></div>
+            <p className='text-gray-300'>페이지를 불러오는 중...</p>
           </div>
         </div>
       }

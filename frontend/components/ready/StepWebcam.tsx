@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useWebcamStore } from "@/store/webcamStore";
 import { toast } from "sonner";
+import { useWebcamStore } from "@/store/webcamStore";
+import { Button } from "@/components/ui/button";
 
 interface StepWebcamProps {
   onComplete: (isActive: boolean) => void;
 }
 
-export default function StepWebcam({ onComplete }: StepWebcamProps) {
+export function StepWebcam({ onComplete }: StepWebcamProps) {
   const webcamVideoRef = useRef<HTMLVideoElement | null>(null);
   const {
     stream: webcamStream,

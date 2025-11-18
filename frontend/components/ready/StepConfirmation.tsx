@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { FiArrowRight, FiCheck, FiX } from "react-icons/fi";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface PreparationItemProps {
   label: string;
@@ -57,7 +57,7 @@ interface StepConfirmationProps {
   workoutPath: string;
 }
 
-export default function StepConfirmation({
+export function StepConfirmation({
   workoutSelected,
   workoutTitle,
   webcamActive,

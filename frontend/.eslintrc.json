@@ -1,0 +1,76 @@
+{
+  "root": true,
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "plugins": ["import"],
+  "settings": {
+    "next": {
+      "rootDir": "./"
+    }
+  },
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@next/next/no-img-element": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "object",
+          ["builtin", "external"],
+          "internal",
+          ["parent", "sibling", "index"],
+          "type"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "next",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "next/**",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "@/lib/**",
+            "group": "external",
+            "position": "after"
+          },
+          {
+            "pattern": "@/store/**",
+            "group": "external",
+            "position": "after"
+          },
+          {
+            "pattern": "@/hooks/**",
+            "group": "external",
+            "position": "after"
+          },
+          {
+            "pattern": "@/components/**",
+            "group": "internal",
+            "position": "after"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react", "next", "dayjs"],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
+  }
+}

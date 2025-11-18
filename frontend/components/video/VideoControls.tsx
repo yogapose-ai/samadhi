@@ -1,8 +1,7 @@
-'use client';
+"use client";
 
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { Button, Slider } from "@/components/ui";
 
 interface VideoControlsProps {
   isPlaying: boolean;

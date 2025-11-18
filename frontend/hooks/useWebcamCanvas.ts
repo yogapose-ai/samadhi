@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from "react";
+import { JointAngles } from "@/types";
 import {
   DrawingUtils,
   Landmark,
@@ -9,12 +10,8 @@ import {
   calculateAllAngles,
   vectorize,
 } from "@/lib/mediapipe/angle-calculator";
+import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 import { usePoseStore } from "@/store/poseStore";
-import { JointAngles } from "@/types/pose";
-import {
-  classifyPoseWithVectorized,
-  normalizeMirroredVectorized,
-} from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 
 interface UseWebcamCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -101,9 +98,6 @@ export function useWebcamCanvas({
         } else {
           sequenceData.push(landmarks);
         }
-
-        // 벡터화
-        // const data = normalizeMirroredVectorized(vectorize(landmarks, video.videoHeight, video.videoWidth));
 
         const data = vectorize(landmarks, video.videoHeight, video.videoWidth);
 

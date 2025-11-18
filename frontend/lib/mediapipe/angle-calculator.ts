@@ -1,5 +1,6 @@
-import type { Landmark, JointAngles } from "@/types/pose";
 import { normalizeMirroredVectorized } from "../poseClassifier/pose-classifier-with-vectorized";
+
+import type { Landmark, JointAngles } from "@/types/pose";
 
 // MediaPipe 랜드마크 인덱스 (총 33개 중 각도 계산에 필요한 주요 랜드마크만 정의)
 export const LANDMARK_INDICES = {
@@ -346,7 +347,7 @@ export interface CosAndEuc {
   euclidScore: number; // 유클리드 점수 (0 ~ 100)
 }
 
-export const CalculateCosAndEuc = (
+export const calculateCosAndEuc = (
   P1: number[],
   P2: number[]
 ): CosAndEuc | null => {
@@ -422,12 +423,12 @@ export const CalculateCosAndEuc = (
   };
 };
 
-export function CalculateMixedScore(
+export function calculateMixedScore(
   cosAndEuc: CosAndEuc | null,
   lambda: number = 0.7
 ): number {
   if (!cosAndEuc) return 0;
-  const { cosine, cosineScore, diff, normDiff, euclidScore } = cosAndEuc;
+  const { cosine, cosineScore, normDiff, euclidScore } = cosAndEuc;
 
   // 3) 혼합 - 람다 기본값 0.7 (cos 0.7:euc 0.3)
   if (lambda < 0 || lambda > 1) return 0;
@@ -445,14 +446,14 @@ export function CalculateMixedScore(
   return mixedScore;
 }
 
-export function CalculateSimilarity(
+export function calculateSimilarity(
   P1: number[],
   P2: number[],
   lambda: number = 0.7
 ): number {
   P1 = normalizeMirroredVectorized(P1);
-  const result = CalculateCosAndEuc(P1, P2);
-  return CalculateMixedScore(result, lambda);
+  const result = calculateCosAndEuc(P1, P2);
+  return calculateMixedScore(result, lambda);
 }
 
 /*

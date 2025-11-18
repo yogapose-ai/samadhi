@@ -1,16 +1,13 @@
 "use client";
 
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
-import AuthModal from "@/components/common/AuthModal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
 import useAuthStore from "@/store/authStore";
+import AuthModal from "@/components/common/AuthModal";
+import { Button, Input, Label } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
