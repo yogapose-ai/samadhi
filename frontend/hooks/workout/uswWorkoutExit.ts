@@ -51,9 +51,9 @@ export function useWorkoutExit(
         return;
       }
 
-      // 운동 시간 계산 (분 단위)
+      // 운동 시간 계산 (초 단위)
       const endTime = Date.now();
-      const workingoutTime = Math.floor((endTime - startTime) / 1000 / 60);
+      const workingoutTime = Math.floor((endTime - startTime) / 1000);
 
       // 총 점수 계산 (평균 유사도)
       const totalScore = Math.round(
