@@ -36,6 +36,10 @@ export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
 
   const workerRef = useRef<Worker | null>(null);
   const [isWorkerInitialized, setIsWorkerInitialized] = useState(false);
+  
+  // 🏃‍➡️ 워커가 현재 포즈 추정 중인지 여부 (busy flag)
+  const workerBusyRef = useRef<boolean>(false);
+  
   const lastDrawnLandmarks = useRef<NormalizedLandmark[] | null>(null);
 
   const { webcam, setWebcamData } = usePoseStore();
@@ -54,6 +58,9 @@ export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
       if (type === "INITIALIZED") {
         setIsWorkerInitialized(true);
       } else if (type === "RESULT" && landmarks) {
+        // 🏃‍➡️ 워커가 이 프레임 처리를 끝냈으니 busy 해제
+        workerBusyRef.current = false;
+
         // 워커에서 받은 결과는 저장만 하고, 드로잉은 detectLoop 내에서 실행
         lastDrawnLandmarks.current = landmarks;
 
@@ -67,6 +74,7 @@ export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
 
     return () => {
       worker.terminate();
+      workerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -109,6 +117,10 @@ export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
         return;
       }
 
+      // 🏃‍➡️ 성능을 위해 해상도 제한
+      videoElement.width = 640;
+      videoElement.height = 360;
+
       const FRAME_INTERVAL = 33; // 30 FPS 목표 (1000ms / 30 = 33.3ms)
       const shouldDetect = now - lastDetectionTime.current >= FRAME_INTERVAL;
 
@@ -127,8 +139,12 @@ export function useWebcamCanvas({ videoRef, isActive }: UseWebcamCanvasProps) {
         drawSkeleton(ctx, lastDrawnLandmarks.current);
       }
 
-      if (shouldDetect) {
+      // 🏃‍➡️ 워커가 한가할 때만 프레임 전송
+      if (shouldDetect && !workerBusyRef.current) {
         try {
+          // 🏃‍➡️ 워커 점유 시작
+          workerBusyRef.current = true;
+          
           // 3. ImageBitmap 생성
           const imageBitmap = await createImageBitmap(videoElement);
 
