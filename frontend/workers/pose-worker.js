@@ -80,8 +80,11 @@ self.onmessage = async (event) => {
 
         const latency = Math.round(performance.now() - detectStartTime);
         const fps = lastFrameTime
-          ? Math.round(1000 / (detectStartTime - lastFrameTime))
+          ? Math.round(1000 / (timestamp - lastFrameTime))
           : 0;
+
+        // console.log(`[WORKER] Finished detection in ${latency.toFixed(2)}ms.`);
+        // console.log(`[WORKER] fps:  ${fps}`);
 
         postMessage({
           type: "RESULT",

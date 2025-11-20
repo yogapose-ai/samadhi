@@ -24,6 +24,7 @@ import {
   SimilarityDisplay,
   WorkoutHeader,
   WorkoutSettingsModal,
+  PerformanceMonitor,
 } from "@/components/workout";
 
 function WorkoutContent() {
@@ -107,7 +108,7 @@ function WorkoutContent() {
         />
       </main>
 
-      {/* <PerformanceMonitor /> */}
+      <PerformanceMonitor />
 
       <TimelineClipper ref={timelineClipperRef} />
 
