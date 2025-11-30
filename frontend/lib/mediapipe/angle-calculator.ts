@@ -1,5 +1,3 @@
-import { normalizeMirroredVectorized } from "../poseClassifier/pose-classifier-with-vectorized";
-
 import type { Landmark, JointAngles } from "@/types/pose";
 
 // MediaPipe 랜드마크 인덱스 (총 33개 중 각도 계산에 필요한 주요 랜드마크만 정의)
@@ -30,9 +28,11 @@ export const LANDMARK_INDICES = {
   RIGHT_ANKLE: 28,
   LEFT_HEEL: 29,
   RIGHT_HEEL: 30,
+  LEFT_FOOT_INDEX: 31,
+  RIGHT_FOOT_INDEX: 32,
 } as const;
 
-const MIN_VISIBILITY = 0.5; // visibility 임계값
+const MIN_VISIBILITY = 0.1; // visibility 임계값
 const DEAD_ZONE = 2.0; // 2도 이하 변화는 무시
 
 /**
@@ -43,13 +43,13 @@ function calculateAngle3D(
   b: Landmark,
   c: Landmark
 ): number | null {
-  if (
-    (a.visibility || 0) < MIN_VISIBILITY ||
-    (b.visibility || 0) < MIN_VISIBILITY ||
-    (c.visibility || 0) < MIN_VISIBILITY
-  ) {
-    return null; // 안 보이는 랜드마크는 계산하지 않음
-  }
+  //   if (
+  //     (a.visibility || 0) < MIN_VISIBILITY ||
+  //     (b.visibility || 0) < MIN_VISIBILITY ||
+  //     (c.visibility || 0) < MIN_VISIBILITY
+  //   ) {
+  //     return null; // 안 보이는 랜드마크는 계산하지 않음
+  //   }
 
   // 벡터 BA와 BC
   const ba = { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
@@ -252,12 +252,39 @@ export function calculateAllAngles(
   );
 
   /*------------ 몸통 ------------*/
-  // 척추: 어깨 중앙점 - 골반 중앙점 - 무릎 중앙점
-  calculatedAngles.spine = calcAngle(
+  // 척추: 골반 연결선과 어깨중심-골반중심 축의 각도
+  const leftHip = landmarks[LANDMARK_INDICES.LEFT_HIP];
+  const rightHip = landmarks[LANDMARK_INDICES.RIGHT_HIP];
+
+  const vecHip = {
+    x: rightHip.x - leftHip.x,
+    y: rightHip.y - leftHip.y,
+    z: rightHip.z - leftHip.z,
+  };
+  const vecSpine = {
+    x: centerShoulder.x - centerHip.x,
+    y: centerShoulder.y - centerHip.y,
+    z: centerShoulder.z - centerHip.z,
+  };
+  const dotProduct =
+    vecHip.x * vecSpine.x + vecHip.y * vecSpine.y + vecHip.z * vecSpine.z;
+  const magHip = Math.sqrt(vecHip.x ** 2 + vecHip.y ** 2 + vecHip.z ** 2);
+  const magSpine = Math.sqrt(
+    vecSpine.x ** 2 + vecSpine.y ** 2 + vecSpine.z ** 2
+  );
+
+  // 분모가 0이 되는 상황 방지
+  let spineAngle = tempPreviousAngles.spine ?? 0;
+  if (magHip !== 0 && magSpine !== 0) {
+    const cosAngle = dotProduct / (magHip * magSpine);
+    const angle =
+      (Math.acos(Math.max(-1, Math.min(1, cosAngle))) * 180) / Math.PI;
+    spineAngle = Math.round(angle * 10) / 10;
+  }
+
+  calculatedAngles.spine = applyDeadZone(
     "spine",
-    centerShoulder,
-    centerHip,
-    centerKnee,
+    spineAngle,
     tempPreviousAngles,
     updatePrevious
   );
@@ -309,7 +336,7 @@ export function calculateAllAngles(
     "leftAnkle",
     landmarks[LANDMARK_INDICES.LEFT_KNEE],
     landmarks[LANDMARK_INDICES.LEFT_ANKLE],
-    landmarks[LANDMARK_INDICES.LEFT_HEEL],
+    landmarks[LANDMARK_INDICES.LEFT_FOOT_INDEX],
     tempPreviousAngles,
     updatePrevious
   );
@@ -319,7 +346,7 @@ export function calculateAllAngles(
     "rightAnkle",
     landmarks[LANDMARK_INDICES.RIGHT_KNEE],
     landmarks[LANDMARK_INDICES.RIGHT_ANKLE],
-    landmarks[LANDMARK_INDICES.RIGHT_HEEL],
+    landmarks[LANDMARK_INDICES.RIGHT_FOOT_INDEX],
     tempPreviousAngles,
     updatePrevious
   );
@@ -337,123 +364,6 @@ export function calculateAllAngles(
   setAllPreviousAngles(tempPreviousAngles);
 
   return calculatedAngles;
-}
-
-export interface CosAndEuc {
-  cosine: number; // 코사인 유사도 (-1 ~ 1)
-  cosineScore: number; // 코사인 점수 (0 ~ 100)
-  diff: number; // 유클리드 거리
-  normDiff: number; // 정규화된 유클리드 거리 (0 ~ 1)
-  euclidScore: number; // 유클리드 점수 (0 ~ 100)
-}
-
-export const calculateCosAndEuc = (
-  P1: number[],
-  P2: number[]
-): CosAndEuc | null => {
-  // console.log("P1::::", P1);
-  const n = P1.length;
-  if (n !== P2.length || n === 0) {
-    return null;
-  }
-
-  // 내적과 노름
-  let dot = 0;
-  let sum1 = 0;
-  let sum2 = 0;
-  let diffSum = 0;
-  let invisibleCount = 0; // 보이지 않는 landmark 개수
-  const totalLandmarks = n / 3; // 전체 landmark 개수
-
-  for (let i = 0; i < n; i += 3) {
-    // 3개씩 묶어서 [x, y, z] 체크
-    const isP1Visible = P1[i] !== 0 || P1[i + 1] !== 0 || P1[i + 2] !== 0;
-    const isP2Visible = P2[i] !== 0 || P2[i + 1] !== 0 || P2[i + 2] !== 0;
-
-    // 둘 중 하나라도 보이지 않으면 카운트
-    if (!isP1Visible || !isP2Visible) {
-      invisibleCount++;
-      // 보이지 않는 점은 계산에서 제외 (0으로 처리)
-      continue;
-    }
-
-    // 둘 다 보이는 경우만 계산
-    for (let j = 0; j < 3; j++) {
-      const a = P1[i + j];
-      const b = P2[i + j];
-      dot += a * b;
-      sum1 += a * a;
-      sum2 += b * b;
-      const d = a - b;
-      diffSum += d * d;
-    }
-  }
-
-  const mag1 = Math.sqrt(sum1);
-  const mag2 = Math.sqrt(sum2);
-
-  if (mag1 === 0 || mag2 === 0) {
-    return null;
-  }
-
-  // 1) 코사인 유사도 (클램프)
-  let cosine = dot / (mag1 * mag2);
-  if (cosine > 1) {
-    cosine = 1;
-  } else if (cosine < -1) {
-    cosine = -1;
-  }
-
-  // 2) 유클리드 거리 정규화
-  const diff = Math.sqrt(diffSum);
-  const normDiff = diff / (mag1 + mag2 + 1e-12);
-
-  // 3) 페널티 적용: 보이지 않는 landmark 비율만큼 감점
-  const visibilityRatio = (totalLandmarks - invisibleCount) / totalLandmarks;
-
-  const cosineScore = ((cosine + 1) / 2) * 100 * visibilityRatio;
-  const euclidScore = (1 - normDiff) * 100 * visibilityRatio;
-
-  return {
-    cosine: cosine,
-    cosineScore: cosineScore,
-    diff: diff,
-    normDiff: normDiff,
-    euclidScore: euclidScore,
-  };
-};
-
-export function calculateMixedScore(
-  cosAndEuc: CosAndEuc | null,
-  lambda: number = 0.7
-): number {
-  if (!cosAndEuc) return 0;
-  const { cosine, cosineScore, normDiff, euclidScore } = cosAndEuc;
-
-  // 3) 혼합 - 람다 기본값 0.7 (cos 0.7:euc 0.3)
-  if (lambda < 0 || lambda > 1) return 0;
-  const mixed = lambda * cosineScore + (1 - lambda) * euclidScore;
-
-  // 4) ε 허용 + 반올림
-  const eps = 1e-4;
-  let mixedScore = 0;
-  if (1 - cosine < eps && normDiff < eps) {
-    mixedScore = 100;
-  } else {
-    mixedScore = Math.max(0, Math.min(100, Math.round(mixed * 1000) / 1000));
-  }
-
-  return mixedScore;
-}
-
-export function calculateSimilarity(
-  P1: number[],
-  P2: number[],
-  lambda: number = 0.7
-): number {
-  P1 = normalizeMirroredVectorized(P1);
-  const result = calculateCosAndEuc(P1, P2);
-  return calculateMixedScore(result, lambda);
 }
 
 /*
@@ -612,9 +522,9 @@ export function vectorize(
   //랜드마크에 대해 픽셀 단위로 변환
   const data = landmarks.map((mark: Landmark) => {
     // visibility가 0.1 이하면 [0, 0, 0] 반환
-    if ((mark.visibility || 0) <= 0.1) {
-      return [0, 0, 0];
-    }
+    // if ((mark.visibility || 0) <= MIN_VISIBILITY) {
+    //   return [0, 0, 0];
+    // }
     return [
       (mark.x * width - anchor.x) / scale,
       (mark.y * height - anchor.y) / scale,

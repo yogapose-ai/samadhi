@@ -7,6 +7,7 @@ export function useMediaPipe() {
 
   const videoLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const webcamLandmarkerRef = useRef<PoseLandmarker | null>(null);
+  const imageLandmarkerRef = useRef<PoseLandmarker | null>(null);
 
   useEffect(() => {
     async function initMediaPipe() {
@@ -15,29 +16,33 @@ export function useMediaPipe() {
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
 
-        const createLandmarker = () => {
+        const createLandmarker = (runningMode?: string) => {
           const options = {
             baseOptions: {
-              modelAssetPath: "/models/pose_landmarker_lite.task",
+              modelAssetPath: "/models/pose_landmarker_heavy.task",
               delegate: "GPU" as "GPU" | "CPU",
             },
             numPoses: 1,
-            minPoseDetectionConfidence: 0.5,
-            minPosePresenceConfidence: 0.5,
+            minPoseDetectionConfidence: 0.2,
+            minPosePresenceConfidence: 0.2,
             minTrackingConfidence: 0.5,
             outputSegmentationMasks: false,
-            runningMode: "VIDEO" as const,
+            runningMode:
+              (runningMode as "VIDEO" | "IMAGE") || ("VIDEO" as const),
           };
           return PoseLandmarker.createFromOptions(vision, options);
         };
 
-        const [videoLandmarker, webcamLandmarker] = await Promise.all([
-          createLandmarker(),
-          createLandmarker(),
-        ]);
+        const [videoLandmarker, webcamLandmarker, imageLandmarker] =
+          await Promise.all([
+            createLandmarker(),
+            createLandmarker(),
+            createLandmarker("IMAGE"),
+          ]);
 
         videoLandmarkerRef.current = videoLandmarker;
         webcamLandmarkerRef.current = webcamLandmarker;
+        imageLandmarkerRef.current = imageLandmarker;
 
         setIsInitialized(true);
       } catch (err) {
@@ -52,12 +57,14 @@ export function useMediaPipe() {
     return () => {
       videoLandmarkerRef.current?.close();
       webcamLandmarkerRef.current?.close();
+      imageLandmarkerRef.current?.close();
     };
   }, []);
 
   return {
     videoLandmarker: videoLandmarkerRef.current,
     webcamLandmarker: webcamLandmarkerRef.current,
+    imageLandmarker: imageLandmarkerRef.current,
     isInitialized,
     error,
   };

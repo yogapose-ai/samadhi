@@ -3,7 +3,10 @@
 import { useRef, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { usePoseStore, useVideoStore, useWebcamStore } from "@/store";
-import { calculateSimilarity } from "@/lib/mediapipe/angle-calculator";
+import {
+  calculateSimilarityWithAnglesAndVectorized,
+  calculateSimilarityWithVectorized,
+} from "@/lib/mediapipe/similarity-calculator";
 import { calculateContainerWidths } from "@/lib/workout/utils";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import {
@@ -76,13 +79,18 @@ function WorkoutContent() {
 
   const P1 = webcam.vectorized;
   const P2 = video.vectorized;
-  const similarityValue = calculateSimilarity(P1, P2);
+  const similarityResult = calculateSimilarityWithAnglesAndVectorized(
+    P1,
+    P2,
+    webcam.angles,
+    video.angles
+  );
 
   const { videoContainerWidth, webcamContainerWidth } =
     calculateContainerWidths(settings);
 
   return (
-    <div className='flex flex-col h-screen bg-black text-white'>
+    <div className="flex flex-col h-screen bg-black text-white">
       <ModelLoadingOverlay />
 
       <WorkoutHeader
@@ -91,7 +99,7 @@ function WorkoutContent() {
         onExitClick={handleExit}
       />
 
-      <main className='flex flex-1 overflow-hidden'>
+      <main className="flex flex-1 overflow-hidden">
         <VideoSection
           videoRef={videoRef}
           isInitialized={isInitialized}
@@ -120,7 +128,7 @@ function WorkoutContent() {
 
       <TimelineClipper ref={timelineClipperRef} />
 
-      <SimilarityDisplay similarityValue={similarityValue} />
+      <SimilarityDisplay similarityValue={similarityResult.combinedScore} />
 
       <WorkoutSettingsModal
         isOpen={isSettingsOpen}

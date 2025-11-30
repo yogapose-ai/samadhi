@@ -109,7 +109,7 @@ export function useWebcamCanvas({
             : 0;
           lastFrameTime.current = detectStartTime;
 
-          const poseClass = classifyPoseWithVectorized(data);
+        //   const poseClass = classifyPoseWithVectorized(data);
 
           const latency = Math.round(performance.now() - detectStartTime);
 
@@ -118,7 +118,7 @@ export function useWebcamCanvas({
             angles,
             fps,
             data,
-            poseClass.bestPose,
+            "unknown",
             latency
           );
 
