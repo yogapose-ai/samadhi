@@ -350,15 +350,25 @@ export default function TestPage() {
 
         // 기준 이미지 추출
         const referencePath = `/dataset/pose_data/${folder.reference}`;
-        const referenceResult = await extractPoseFromImage(referencePath);
+        const defaultReferenceResult = await extractPoseFromImage(referencePath);
 
-        if (!referenceResult) {
-          console.warn(
-            `Failed to extract pose from reference: ${folder.reference}`
-          );
+        if (!defaultReferenceResult) {
+          console.warn(`Failed to extract pose from reference: ${folder.reference}`);
           continue;
         }
-
+        let secondaryReferenceResult = null;
+        if (folder.name === "하이런지자세 (1)") {
+          // 확장자가 jpeg인지 png인지 확인 필요 (요청하신 대로 jpeg로 가정)
+          const secondaryRefPath = `/dataset/pose_data/하이런지자세2.jpeg`; 
+          try {
+            secondaryReferenceResult = await extractPoseFromImage(secondaryRefPath);
+            if(!secondaryReferenceResult) console.warn("Failed to load secondary reference");
+          } catch (e) {
+            console.warn("Error loading secondary reference", e);
+          }
+        }
+        let lambda=1;
+        if (folder.name === "여신자세 (1)" || folder.name === "여신자세 (2)") lambda=0.4;
         // 폴더 내 이미지들 추출
         const imageFiles: string[] = [];
         for (let i = 1; i <= 10; i++) {
@@ -390,11 +400,32 @@ export default function TestPage() {
             continue;
           }
 
+          let currentReference = defaultReferenceResult; // 기본값
+
+          // 파일 경로에서 숫자 추출 (예: .../pic_5.jpg -> 5)
+          const match = imagePath.match(/pic_(\d+)\./);
+          const picNum = match ? parseInt(match[1], 10) : 0;
+
+          // 하이런지자세 (1) 폴더이면서, 특정 번호(2, 7, 8, 9, 10)인 경우
+          if (folder.name === "하이런지자세 (1)" && secondaryReferenceResult) {
+            // Set B: 2, 7, 8, 9, 10 -> 하이런지자세2 사용
+            if ([2, 7, 8, 9, 10].includes(picNum)) {
+              currentReference = secondaryReferenceResult;
+              // console.log(`Switched reference for ${imagePath} to 하이런지자세2`);
+            } 
+            // Set A: 1, 3, 4, 5, 6 -> 기본값(하이런지자세.png) 유지
+          }
+          
+          // -------------------------------------------------------------
+          // 유사도 계산 (선택된 currentReference 사용)
+          // -------------------------------------------------------------
+          // 인자가 추가된 calculateSimilarityWithAnglesAndVectorized 호출
           const similarity = calculateSimilarityWithAnglesAndVectorized(
-            referenceResult.vectorized,
+            currentReference.vectorized, // 동적으로 선택된 기준 벡터
             imageResult.vectorized,
-            referenceResult.angles,
-            imageResult.angles
+            currentReference.angles,     // 동적으로 선택된 기준 각도
+            imageResult.angles,
+            lambda
           );
 
           console.log(`Similarity for ${imagePath}:`, similarity);

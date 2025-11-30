@@ -340,7 +340,8 @@ export function calculateSimilarityWithAnglesAndVectorized(
   referenceVectorized: number[],
   userVectorized: number[],
   referenceAngles: JointAngles | null,
-  userAngles: JointAngles | null
+  userAngles: JointAngles | null,
+  lambda: number
 ): SimilarityResult {
   //   const vectorizedScore = calculateSimilarityWithVectorized(
   //     referenceVectorized,
@@ -352,15 +353,31 @@ export function calculateSimilarityWithAnglesAndVectorized(
     referenceVectorized,
     userVectorized
   );
+  const foot_distace_ref = getLimbVector(
+    referenceVectorized,
+    "LEFT_HEEL",
+    "RIGHT_HEEL"
+  );
+  const foot_distace_usr = getLimbVector(
+    userVectorized,
+    "LEFT_HEEL",
+    "RIGHT_HEEL"
+  );
+  const foot_distance_tmp = calculateCosAndEucTotalJoint(
+    foot_distace_ref,
+    foot_distace_usr
+  );
+  
+  const foot_distance = calculateCosAndEucMixedScore(foot_distance_tmp);
+  console.log("foot_distance : ", foot_distance);
   const angleScore =
     referenceAngles && userAngles
       ? calculateSimilarityWithAngles(referenceAngles, userAngles, "_")
       : 0;
 
   // 가중치 조정 (벡터화된 데이터에 더 큰 비중 부여)
-  const lambda = 1;
   const combinedScore =
-    lambda * angleScore + (1 - lambda) * heelAndFootIndexScore;
+    lambda * angleScore + ((1 - lambda)/4) * heelAndFootIndexScore +((1 - lambda)/4*3) * foot_distance;
 
   return {
     vectorizedScore: heelAndFootIndexScore,
