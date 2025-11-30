@@ -52,8 +52,8 @@ function calculateAngle3D(
   //   }
 
   // 벡터 BA와 BC
-  const ba = { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
-  const bc = { x: c.x - b.x, y: c.y - b.y, z: c.z - b.z };
+  const ba = { x: a.x - b.x, y: a.y - b.y, z: 0 };
+  const bc = { x: c.x - b.x, y: c.y - b.y, z: 0 };
 
   // 내적
   const dot = ba.x * bc.x + ba.y * bc.y + ba.z * bc.z;

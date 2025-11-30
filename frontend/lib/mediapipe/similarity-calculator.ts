@@ -197,6 +197,23 @@ export function calculateSimilarityWithAngles(
     }
   }
 
+  // 팔꿈치 각도가 30도 이하로 구부러진 경우 가중치 조정
+  if (referenceAngles.leftElbow < 100) {
+    diffTans.leftElbow = 0.5; // 패널티 감소
+    diffTans.leftWrist = 0.5;
+  } else if (referenceAngles.leftElbow > 130) {
+    weights.leftShoulder = 0;
+  }
+  if (referenceAngles.rightElbow < 100) {
+    diffTans.rightElbow = 0.5; // 패널티 감소
+    diffTans.rightWrist = 0.5;
+  } else if (referenceAngles.rightElbow > 130) {
+    weights.rightShoulder = 0;
+  }
+  diffTans.spine = 2;
+  diffTans.leftHipShoulderAlign = 2;
+  diffTans.rightHipShoulderAlign = 2;
+
   console.log(referenceAngles.leftKnee, userAngles.leftKnee, diffTans.leftKnee);
   console.log(
     referenceAngles.rightKnee,
@@ -210,7 +227,12 @@ export function calculateSimilarityWithAngles(
     const weight = weights[key] || 1;
     // 각도 차이를 0~1로 정규화 (0~180)
     if (key === "spine") {
-      angleDiff = Math.pow(angleDiff, 2); // spine은 작은 차이도 더 민감하게 반영
+      console.log(
+        "Raw angle diff for spine:",
+        referenceAngles[key],
+        userAngles[key],
+        angleDiff
+      );
     }
     const normDiff = Math.min((angleDiff * tan) / 180, 1);
     const similarity = 1 - normDiff; // 유사도 (1에 가까울수록 더 유사)
@@ -336,7 +358,7 @@ export function calculateSimilarityWithAnglesAndVectorized(
       : 0;
 
   // 가중치 조정 (벡터화된 데이터에 더 큰 비중 부여)
-  const lambda = 0.7;
+  const lambda = 1;
   const combinedScore =
     lambda * angleScore + (1 - lambda) * heelAndFootIndexScore;
 
