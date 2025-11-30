@@ -44,6 +44,7 @@ export function useVideoCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const lastFrameTime = useRef<number>(0);
+  const recentPosesRef = useRef<string[]>([]);
 
   const { video, setVideoData, setPreviousAngles } = usePoseStore();
   const { source, sourceType, isPlaying } = useVideoStore();
@@ -136,20 +137,47 @@ export function useVideoCanvas({
           lastFrameTime.current = detectStartTime;
 
           // 포즈 분류
-          const poseClass = classifyPoseWithVectorized(data, angles);
+          const detectedPose = classifyPoseWithVectorized(
+            data,
+            angles
+          ).bestPose;
+
+          // 최근 10개 프레임의 자세 추적
+          recentPosesRef.current.push(detectedPose);
+          if (recentPosesRef.current.length > 10) {
+            recentPosesRef.current.shift();
+          }
+
+          // 10개가 채워졌을 때만 자세 결정
+          let finalPoseClass = video.poseClass; // 기본값은 현재 자세 유지
+          if (recentPosesRef.current.length >= 10) {
+            // 각 자세의 빈도 계산
+            const poseCounts = recentPosesRef.current.reduce((acc, pose) => {
+              acc[pose] = (acc[pose] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+
+            // 가장 많이 나타나는 자세 찾기
+            let mostFrequentPose = "";
+            let maxCount = 0;
+            for (const [pose, count] of Object.entries(poseCounts)) {
+              if (count > maxCount) {
+                maxCount = count;
+                mostFrequentPose = pose;
+              }
+            }
+
+            // 8프레임 이상이 같을 때만 자세 업데이트
+            if (maxCount >= 8) {
+              finalPoseClass = mostFrequentPose;
+            }
+          }
 
           // 전체 처리 시간 계산 (ms)
           const latency = Math.round(performance.now() - detectStartTime);
 
           // Store에 저장
-          setVideoData(
-            landmarks,
-            angles,
-            fps,
-            data,
-            poseClass.bestPose,
-            latency
-          );
+          setVideoData(landmarks, angles, fps, data, finalPoseClass, latency);
 
           drawSkeleton(ctx, landmarks);
         } else {

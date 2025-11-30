@@ -29,32 +29,31 @@ export const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
     // console.log(video.poseClass, currentPose);
     if (video.poseClass !== currentPose) {
       const now = Date.now();
-      if (currentPose !== "unknown") {
-        // End the previous pose timeline
-        setTimelines((prev) => {
-          const updated = [...prev];
-          const lastTimeline = updated[updated.length - 1];
-          const avgSimilarity =
-            similarities.length > 0
-              ? similarities.reduce((a, b) => a + b, 0) / similarities.length
-              : 0;
-          if (lastTimeline && lastTimeline.endTime === 0) {
-            lastTimeline.endTime = now;
-            lastTimeline.similarity = avgSimilarity;
-            setSimilarities([]); // Reset similarities for the next pose
-          }
+      // End the previous pose timeline
+      setTimelines((prev) => {
+        const updated = [...prev];
+        const lastTimeline = updated[updated.length - 1];
+        const avgSimilarity =
+          similarities.length > 0
+            ? similarities.reduce((a, b) => a + b, 0) / similarities.length
+            : 0;
+        if (lastTimeline && lastTimeline.endTime === 0) {
+          lastTimeline.endTime = now;
+          lastTimeline.similarity = avgSimilarity;
+          setSimilarities([]); // Reset similarities for the next pose
+        }
 
-          return updated;
-        });
-      }
+        return updated;
+      });
+      console.log("");
       // Start a new pose timeline
       if (video.poseClass !== "unknown") {
         setTimelines((prev) => [
           ...prev,
           { pose: video.poseClass, startTime: now, endTime: 0, similarity: 0 },
         ]);
-        setCurrentPose(video.poseClass);
       }
+      setCurrentPose(video.poseClass);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video.poseClass]);

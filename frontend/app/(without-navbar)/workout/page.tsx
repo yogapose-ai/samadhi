@@ -74,13 +74,11 @@ function WorkoutContent() {
 
   const { handleTogglePlay, handleSeek } = useVideoControls(videoRef);
 
-  const P1 = webcam.vectorized;
-  const P2 = video.vectorized;
   const similarityValue = calculateSimilarityWithAnglesAndVectorized(
-    P1,
-    P2,
-    webcam.angles,
+    video.vectorized,
+    webcam.vectorized,
     video.angles,
+    webcam.angles,
     1
   );
 

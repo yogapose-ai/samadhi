@@ -14,7 +14,7 @@ export function classifyPoseWithVectorized(
   let bestPose = "unknown";
   let maxDistance = 0;
   const distPerPose: Record<string, number[]> = {};
-  const VEC_THRESHOLD = 90;
+  const VEC_THRESHOLD = 95;
   const ANGLE_THRESHOLD = 80;
 
   // 좌우 반전 버전 생성
