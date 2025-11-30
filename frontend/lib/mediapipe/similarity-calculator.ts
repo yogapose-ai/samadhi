@@ -152,6 +152,8 @@ export function calculateSimilarityWithAngles(
     weights[key] = 1;
   }
   weights.spine = 3; // spine 가중치 3배
+  weights.leftHipShoulderAlign = 2;
+  weights.rightHipShoulderAlign = 2;
 
   for (const key of keys) {
     const valA = referenceAngles[key];
