@@ -50,7 +50,7 @@ export function PerformanceMonitor() {
                 : "text-red-400"
             }`}
           >
-            {webcamFps.toFixed(1)}
+            {webcamFps}
           </span>
         </div>
 
@@ -82,7 +82,7 @@ export function PerformanceMonitor() {
                 : "text-red-400"
             }`}
           >
-            {videoFps.toFixed(1)}
+            {videoFps}
           </span>
         </div>
 

@@ -18,7 +18,7 @@ export function useMediaPipe() {
         const createLandmarker = () => {
           const options = {
             baseOptions: {
-              modelAssetPath: "/models/pose_landmarker_lite.task",
+              modelAssetPath: "/models/pose_landmarker_heavy.task",
               delegate: "GPU" as "GPU" | "CPU",
             },
             numPoses: 1,
