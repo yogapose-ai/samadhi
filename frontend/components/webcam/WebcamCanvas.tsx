@@ -1,27 +1,17 @@
 "use client";
 
-import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { CameraOff } from "lucide-react";
 import { useWebcamCanvas } from "@/hooks/useWebcamCanvas";
 
 interface WebcamCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isActive: boolean;
-  isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
 }
 
-export function WebcamCanvas({
-  videoRef,
-  isActive,
-  isInitialized,
-  landmarker,
-}: WebcamCanvasProps) {
+export function WebcamCanvas({ videoRef, isActive }: WebcamCanvasProps) {
   const { canvasRef } = useWebcamCanvas({
     videoRef,
     isActive,
-    isInitialized,
-    landmarker,
   });
 
   return (

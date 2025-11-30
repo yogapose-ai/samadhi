@@ -1,10 +1,7 @@
-import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { VideoCanvas, VideoControls } from "@/components/video";
 
 interface VideoSectionProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
   isScreenShare: boolean;
   isPlaying: boolean;
   currentTime: number;
@@ -17,8 +14,6 @@ interface VideoSectionProps {
 
 export function VideoSection({
   videoRef,
-  isInitialized,
-  landmarker,
   isScreenShare,
   isPlaying,
   currentTime,
@@ -38,11 +33,7 @@ export function VideoSection({
       }}
     >
       <div className='w-full max-w-full'>
-        <VideoCanvas
-          videoRef={videoRef}
-          isInitialized={isInitialized}
-          landmarker={landmarker}
-        />
+        <VideoCanvas videoRef={videoRef} />
         {!isScreenShare && (
           <div className='p-2 bg-black/50 rounded-b-lg'>
             <VideoControls

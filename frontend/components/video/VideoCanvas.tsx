@@ -1,24 +1,15 @@
 "use client";
 
-import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { Video } from "lucide-react";
 import { useVideoCanvas } from "@/hooks/useVideoCanvas";
 
 interface VideoCanvasProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  isInitialized: boolean;
-  landmarker: PoseLandmarker | null;
 }
 
-export function VideoCanvas({
-  videoRef,
-  isInitialized,
-  landmarker,
-}: VideoCanvasProps) {
+export function VideoCanvas({ videoRef }: VideoCanvasProps) {
   const { canvasRef, sourceType } = useVideoCanvas({
     videoRef,
-    isInitialized,
-    landmarker,
   });
 
   return (
