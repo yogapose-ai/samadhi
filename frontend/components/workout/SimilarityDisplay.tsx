@@ -3,9 +3,13 @@ import { AnimatePresence } from "framer-motion";
 
 interface SimilarityDisplayProps {
   similarityValue: number;
+  showFeedback?: boolean;
 }
 
-export function SimilarityDisplay({ similarityValue }: SimilarityDisplayProps) {
+export function SimilarityDisplay({
+  similarityValue,
+  showFeedback = true,
+}: SimilarityDisplayProps) {
   const [displayValue, setDisplayValue] = useState(similarityValue);
   const lastUpdateRef = useRef(Date.now());
   const THROTTLE_MS = 500; // 500ms마다 한 번만 업데이트
@@ -34,8 +38,20 @@ export function SimilarityDisplay({ similarityValue }: SimilarityDisplayProps) {
         <div className='relative bg-transparent backdrop-blur-md rounded-2xl shadow-xl p-8 min-w-[600px]'>
           <div className='text-center text-white/90 font-bold'>
             <div className='text-[70px]'>
-              <span className=' mb-3'>{feedback.emoji} </span>
-              <span className=''>{feedback.text}</span>
+              {showFeedback ? (
+                <>
+                  <span className=' mb-3'>{feedback.emoji} </span>
+                  <span className=''>{feedback.text}</span>
+                </>
+              ) : (
+                <div
+                  className='text-[70px] font-bold text-white/80 mb-2  text-right'
+                  key={displayValue}
+                >
+                  <span className='mr-3'>{feedback.emoji}</span>
+                  {displayValue.toFixed(1)}점
+                </div>
+              )}
             </div>
           </div>
         </div>

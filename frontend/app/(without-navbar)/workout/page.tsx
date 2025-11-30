@@ -76,6 +76,8 @@ function WorkoutContent() {
   const { videoContainerWidth, webcamContainerWidth } =
     calculateContainerWidths(settings);
 
+  const [showFeedback, setShowFeedback] = useState(true);
+
   return (
     <div className='flex flex-col h-screen bg-black text-white'>
       {/* <ModelLoadingOverlay /> */}
@@ -84,6 +86,8 @@ function WorkoutContent() {
         isReady={isReady}
         onSettingsClick={() => setIsSettingsOpen(true)}
         onExitClick={handleExit}
+        showFeedback={showFeedback}
+        onToggleFeedback={() => setShowFeedback(!showFeedback)}
       />
 
       <main className='flex flex-1 overflow-hidden'>
@@ -111,7 +115,10 @@ function WorkoutContent() {
 
       <TimelineClipper ref={timelineClipperRef} />
 
-      <SimilarityDisplay similarityValue={similarityValue} />
+      <SimilarityDisplay
+        similarityValue={similarityValue}
+        showFeedback={showFeedback}
+      />
 
       <WorkoutSettingsModal
         isOpen={isSettingsOpen}
