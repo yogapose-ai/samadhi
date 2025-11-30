@@ -91,7 +91,7 @@ function WorkoutContent() {
 
   return (
     <div className='flex flex-col h-screen bg-black text-white'>
-      <ModelLoadingOverlay />
+      {/* <ModelLoadingOverlay /> */}
 
       <WorkoutHeader
         isReady={isReady}
