@@ -10,7 +10,7 @@ import {
   calculateAllAngles,
   vectorize,
 } from "@/lib/mediapipe/angle-calculator";
-import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
+// import { classifyPoseWithVectorized } from "@/lib/poseClassifier/pose-classifier-with-vectorized";
 import { usePoseStore } from "@/store/poseStore";
 
 interface UseWebcamCanvasProps {
@@ -109,18 +109,11 @@ export function useWebcamCanvas({
             : 0;
           lastFrameTime.current = detectStartTime;
 
-        //   const poseClass = classifyPoseWithVectorized(data);
+          //   const poseClass = classifyPoseWithVectorized(data);
 
           const latency = Math.round(performance.now() - detectStartTime);
 
-          setWebcamData(
-            landmarks,
-            angles,
-            fps,
-            data,
-            "unknown",
-            latency
-          );
+          setWebcamData(landmarks, angles, fps, data, "unknown", latency);
 
           drawSkeleton(ctx, landmarks);
         }

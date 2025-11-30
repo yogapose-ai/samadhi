@@ -15,7 +15,7 @@ export function classifyPoseWithVectorized(
   let maxDistance = 0;
   const distPerPose: Record<string, number[]> = {};
   const VEC_THRESHOLD = 90;
-  const ANGLE_THRESHOLD = 90;
+  const ANGLE_THRESHOLD = 80;
 
   // 좌우 반전 버전 생성
   const mirroredVectorized = normalizeMirroredVectorized(vectorized);
@@ -38,11 +38,11 @@ export function classifyPoseWithVectorized(
 
     const angleDistanceOriginal =
       angles && poseAngles
-        ? calculateSimilarityWithAngles(angles, poseAngles, name)
+        ? calculateSimilarityWithAngles(poseAngles, angles, name)
         : 0;
     const angleDistanceMirrored =
       mirroredAngles && poseAngles
-        ? calculateSimilarityWithAngles(mirroredAngles, poseAngles, name)
+        ? calculateSimilarityWithAngles(poseAngles, mirroredAngles, name)
         : 0;
 
     // 더 유사한 쪽 선택

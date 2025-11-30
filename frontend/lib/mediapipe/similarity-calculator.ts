@@ -76,7 +76,7 @@ export function calculateCosAndEucTotalJoint(
     cosine = -1;
   }
 
-  console.log("Cosine similarity:", cosine);
+  // console.log("Cosine similarity:", cosine);
 
   // 2) 유클리드 거리 정규화
   const diff = Math.sqrt(diffSum);
@@ -216,25 +216,25 @@ export function calculateSimilarityWithAngles(
   diffTans.leftHipShoulderAlign = 2;
   diffTans.rightHipShoulderAlign = 2;
 
-  console.log(referenceAngles.leftKnee, userAngles.leftKnee, diffTans.leftKnee);
-  console.log(
-    referenceAngles.rightKnee,
-    userAngles.rightKnee,
-    diffTans.rightKnee
-  );
-  console.log("Weights applied for angles:", diffTans);
+  // console.log(referenceAngles.leftKnee, userAngles.leftKnee, diffTans.leftKnee);
+  // console.log(
+  //   referenceAngles.rightKnee,
+  //   userAngles.rightKnee,
+  //   diffTans.rightKnee
+  // );
+  // console.log("Weights applied for angles:", diffTans);
   for (const key of keys) {
     let angleDiff = diffs[key] || 0;
     const tan = diffTans[key] || 1;
     const weight = weights[key] || 1;
     // 각도 차이를 0~1로 정규화 (0~180)
     if (key === "spine") {
-      console.log(
-        "Raw angle diff for spine:",
-        referenceAngles[key],
-        userAngles[key],
-        angleDiff
-      );
+      // console.log(
+      //   "Raw angle diff for spine:",
+      //   referenceAngles[key],
+      //   userAngles[key],
+      //   angleDiff
+      // );
     }
     const normDiff = Math.min((angleDiff * tan) / 180, 1);
     const similarity = 1 - normDiff; // 유사도 (1에 가까울수록 더 유사)
@@ -245,12 +245,12 @@ export function calculateSimilarityWithAngles(
   const totalWeight = keys.reduce((acc, key) => acc + (weights[key] || 1), 0);
   const avgSimilarity = sum / totalWeight;
   //   if (name == "cat" || name == "cow") {
-  console.log(
-    "Angle similarities for pose",
-    //   name,
-    avgSimilarity * 100,
-    similarities
-  );
+  // console.log(
+  //   "Angle similarities for pose",
+  //   //   name,
+  //   avgSimilarity * 100,
+  //   similarities
+  // );
   //   }
   // 0~100으로 scaling
   return avgSimilarity * 100;
@@ -314,9 +314,9 @@ function calculateHeelAndFootIndexSimilarity(
   );
   const leftHeelToFootSimilarity = calculateCosAndEucMixedScore(leftRes, 1);
 
-  console.log("Ref Left Heel to Foot:", refLeftHeelToFoot);
-  console.log("User Left Heel to Foot:", userLeftHeelToFoot);
-  console.log("Left Heel to Foot Similarity:", leftHeelToFootSimilarity);
+  // console.log("Ref Left Heel to Foot:", refLeftHeelToFoot);
+  // console.log("User Left Heel to Foot:", userLeftHeelToFoot);
+  // console.log("Left Heel to Foot Similarity:", leftHeelToFootSimilarity);
 
   const rightRes = calculateCosAndEucTotalJoint(
     refRightHeelToFoot,
@@ -324,9 +324,9 @@ function calculateHeelAndFootIndexSimilarity(
   );
   const rightHeelToFootSimilarity = calculateCosAndEucMixedScore(rightRes, 1);
 
-  console.log("Ref Right Heel to Foot:", refRightHeelToFoot);
-  console.log("User Right Heel to Foot:", userRightHeelToFoot);
-  console.log("Right Heel to Foot Similarity:", rightHeelToFootSimilarity);
+  // console.log("Ref Right Heel to Foot:", refRightHeelToFoot);
+  // console.log("User Right Heel to Foot:", userRightHeelToFoot);
+  // console.log("Right Heel to Foot Similarity:", rightHeelToFootSimilarity);
   const similarity = (leftHeelToFootSimilarity + rightHeelToFootSimilarity) / 2;
   return Math.pow(similarity / 100, 10) * 100; // 제곱하여 강조
 }
@@ -369,9 +369,9 @@ export function calculateSimilarityWithAnglesAndVectorized(
     foot_distace_ref,
     foot_distace_usr
   );
-  
+
   const foot_distance = calculateCosAndEucMixedScore(foot_distance_tmp);
-  console.log("foot_distance : ", foot_distance);
+  // console.log("foot_distance : ", foot_distance);
   const angleScore =
     referenceAngles && userAngles
       ? calculateSimilarityWithAngles(referenceAngles, userAngles, "_")
@@ -379,7 +379,9 @@ export function calculateSimilarityWithAnglesAndVectorized(
 
   // 가중치 조정 (벡터화된 데이터에 더 큰 비중 부여)
   const combinedScore =
-    lambda * angleScore + ((1 - lambda)/4) * heelAndFootIndexScore +((1 - lambda)/4*3) * foot_distance;
+    lambda * angleScore +
+    ((1 - lambda) / 4) * heelAndFootIndexScore +
+    ((1 - lambda) / 4) * 3 * foot_distance;
 
   return {
     vectorizedScore: heelAndFootIndexScore,
