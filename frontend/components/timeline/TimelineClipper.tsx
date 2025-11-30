@@ -3,7 +3,7 @@
 import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { calculateSimilarity } from "@/lib/mediapipe/angle-calculator";
+import { calculateSimilarityWithAnglesAndVectorized } from "@/lib/mediapipe/similarity-calculator";
 import { usePoseStore } from "@/store/poseStore";
 
 export type Timeline = {
@@ -63,11 +63,14 @@ export const TimelineClipper = forwardRef<TimelineClipperRef>((props, ref) => {
     if (timelines.length === 0) return;
     const lastTimeline = timelines[timelines.length - 1];
     if (lastTimeline.endTime === 0) {
-      const similarity = calculateSimilarity(
+      const similarity = calculateSimilarityWithAnglesAndVectorized(
+        video.vectorized,
         webcam.vectorized,
-        video.vectorized
+        video.angles,
+        webcam.angles,
+        1
       );
-      setSimilarities((prev) => [...prev, similarity]);
+      setSimilarities((prev) => [...prev, similarity.combinedScore]);
     }
   }, [timelines, webcam.vectorized, video.vectorized]);
 
