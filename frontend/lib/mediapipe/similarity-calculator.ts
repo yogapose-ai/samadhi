@@ -396,7 +396,9 @@ export function calculateSimilarityWithAnglesAndVectorized(
 }
 
 export function mapCombinedScore(combinedScore: number): number {
-  return combinedScore / 1.1;
+  // combinedScore를 제곱한 후 0~100으로 매핑 (변동폭 크게)
+  return Math.max(0, Math.min(100, Math.pow(combinedScore, 2) * 100));
+  console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 }
 
 // 좌우 반전된 벡터 데이터 생성 함수
