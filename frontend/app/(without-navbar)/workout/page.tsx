@@ -3,7 +3,10 @@
 import { useRef, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { usePoseStore, useVideoStore, useWebcamStore } from "@/store";
-import { calculateSimilarityWithAnglesAndVectorized } from "@/lib/mediapipe/similarity-calculator";
+import {
+  calculateSimilarityWithAnglesAndVectorized,
+  mapCombinedScore,
+} from "@/lib/mediapipe/similarity-calculator";
 import { calculateContainerWidths } from "@/lib/workout/utils";
 import { useMediaPipe } from "@/hooks/useMediaPipe";
 import {
@@ -77,15 +80,17 @@ function WorkoutContent() {
 
   const isPersonInWebcamFrame = webcam.landmarks
     ? isPersonInFrame(webcam.landmarks)
-    : false;
+    : 1;
   const similarityValue = isPersonInWebcamFrame
-    ? calculateSimilarityWithAnglesAndVectorized(
-        video.vectorized,
-        webcam.vectorized,
-        video.angles,
-        webcam.angles,
-        1
-      ).combinedScore
+    ? mapCombinedScore(
+        calculateSimilarityWithAnglesAndVectorized(
+          video.vectorized,
+          webcam.vectorized,
+          video.angles,
+          webcam.angles,
+          1
+        ).combinedScore
+      ) * isPersonInWebcamFrame
     : 0;
 
   const { videoContainerWidth, webcamContainerWidth } =
@@ -94,7 +99,7 @@ function WorkoutContent() {
   const [showFeedback, setShowFeedback] = useState(true);
 
   return (
-    <div className='flex flex-col h-screen bg-black text-white'>
+    <div className="flex flex-col h-screen bg-black text-white">
       {/* <ModelLoadingOverlay /> */}
 
       <WorkoutHeader
@@ -105,7 +110,7 @@ function WorkoutContent() {
         onToggleFeedback={() => setShowFeedback(!showFeedback)}
       />
 
-      <main className='flex flex-1 overflow-hidden'>
+      <main className="flex flex-1 overflow-hidden">
         <VideoSection
           videoRef={videoRef}
           isInitialized={isInitialized}

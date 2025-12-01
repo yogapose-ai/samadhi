@@ -386,13 +386,19 @@ export function calculateSimilarityWithAnglesAndVectorized(
     (lambda * angleScore +
       ((1 - lambda) / 4) * heelAndFootIndexScore +
       ((1 - lambda) / 4) * 3 * foot_distance) /
-    1.2;
+    1.1;
 
   return {
     vectorizedScore: heelAndFootIndexScore,
     angleScore,
     combinedScore,
   };
+}
+
+export function mapCombinedScore(combinedScore: number): number {
+  return (
+    30 + 70 * Math.sqrt(Math.max(0, Math.min(combinedScore - 60, 40)) / 40)
+  );
 }
 
 // 좌우 반전된 벡터 데이터 생성 함수
