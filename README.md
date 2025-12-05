@@ -1,5 +1,3 @@
-## 🧘 서비스 배포 URL : https://api.samadhi.kr
-
 # Samadhi - Personal Yoga Care Partner
 
 MediaPipe 기반의 실시간 자세 추적 및 분석 시스템을 활용한 요가 운동 보조 웹 애플리케이션
